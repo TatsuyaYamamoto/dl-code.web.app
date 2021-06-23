@@ -74,7 +74,7 @@ export const DlCodeUserContextProvider: React.FC<{}> = (props) => {
           log(`DLCode user found. end login-flow. uid: ${uid} `);
           handleLogin(user);
         } else {
-          initUser();
+          initUser(uid);
           log(
             `no DLCode user is on db. wait for backend to create new DLCode user. uid: ${uid} `
           );

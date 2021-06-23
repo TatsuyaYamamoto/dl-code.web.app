@@ -12,7 +12,10 @@
     "strict": true,
     "noImplicitReturns": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": ["node_modules", ".next", "components", "**/*.tsx", "**/*.d.ts"]
 }

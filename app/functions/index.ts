@@ -1,26 +1,24 @@
 import * as functions from "firebase-functions";
+import { logger } from "firebase-functions";
 import * as firebaseAdmin from "firebase-admin";
 
 // Initial Firebase App
 const firebaseApp = firebaseAdmin.initializeApp();
 
 /* eslint-disable import/first */
-import { backupFirestoreData } from "./utils/gcp";
-import { DlCodeUserDocument } from "./domains/DlCodeUser";
-import { sendToSlack } from "./functions/utils/slack";
-
-const { logger } = functions;
+import { getExpressInstance } from "./api";
+import { backupFirestoreData } from "../utils/gcp";
+import { sendToSlack } from "./utils/slack";
 
 // TODO: 保存期間の方針を検討してちょうだい
 const MAX_BACKUP_DATE_LENGTH = 30;
 
-export const api = functions.https.onRequest((_, res) => {
-  // TODO
-  // @ts-ignore
-  res.json({
-    message: "api!",
+export const api = functions
+  .region("asia-northeast1")
+  .https.onRequest(async (...args) => {
+    const server = await getExpressInstance();
+    server(...args);
   });
-});
 
 /**
  * FirestoreのバックアップをstorageにexportするScheduledJob
@@ -89,47 +87,6 @@ export const scheduledFirestoreBackup = functions
     } catch (error) {
       logger.error("fail to backup-export.", error);
     }
-  });
-
-export const initUser = functions
-  .region("asia-northeast1")
-  .https.onCall(async (_, context) => {
-    const uid = context.auth?.uid;
-
-    if (!uid) {
-      throw new functions.https.HttpsError(
-        "permission-denied",
-        "to initialize the user, send the authenticated uid"
-      );
-    }
-
-    const newUserDoc: DlCodeUserDocument = {
-      counters: {
-        product: {
-          limit: 1,
-          current: 0,
-        },
-        downloadCode: {
-          limit: 100,
-          current: 0,
-        },
-        totalFileSizeByte: {
-          limit: 1 * 1000 * 1000 * 1000, // 1GB
-          current: 0,
-        },
-      },
-    };
-    const newUserDocRef = firebaseApp.firestore().collection("users").doc(uid);
-
-    const newUserSnap = await newUserDocRef.get();
-    if (newUserSnap.exists) {
-      throw new functions.https.HttpsError(
-        "already-exists",
-        "user with provided uid is already exist."
-      );
-    }
-
-    await newUserDocRef.set(newUserDoc);
   });
 
 export const cloudFunctionsErrorLog = functions.pubsub

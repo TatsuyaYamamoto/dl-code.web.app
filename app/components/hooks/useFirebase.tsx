@@ -4,6 +4,7 @@ import firebase from "firebase/app";
 
 import useAuth0 from "./useAuth0";
 import configs from "../../configs";
+import { initUser as initUserApi } from "../../utils/api";
 
 type FirebaseApp = firebase.app.App;
 type FirebaseUser = firebase.User;
@@ -97,9 +98,8 @@ const FirebaseContextProvider: React.FC<FirebaseContextProviderProps> = (
 const useFirebase = () => {
   const { app, user, authStateChecked } = useContext(firebaseContext);
 
-  const initUser = async () => {
-    const callable = app.functions("asia-northeast1").httpsCallable("initUser");
-    return callable();
+  const initUser = async (uid: string) => {
+    return initUserApi(uid);
   };
 
   return {
