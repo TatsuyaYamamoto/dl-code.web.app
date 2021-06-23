@@ -28,10 +28,16 @@ const FirebaseContextProvider: React.FC<FirebaseContextProviderProps> = (
     const app =
       firebase.apps[0] ??
       firebase.initializeApp(initParams.options, initParams.name);
-    // @ts-ignore
-    const { projectId } = app.options;
 
-    log(`firebase app initialized. projectId: ${projectId}`);
+    if (process.env.emulator) {
+      app.functions().useEmulator("localhost", 5001);
+      app.firestore().useEmulator("localhost", 5002);
+      app.storage().useEmulator("localhost", 5003);
+      app.auth().useEmulator("http://localhost:5004");
+    }
+
+    // @ts-ignore
+    log(`firebase app initialized. projectId: ${app.options.projectId}`);
 
     return {
       authStateChecked: false,

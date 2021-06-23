@@ -14,7 +14,9 @@
   "scripts": {
     "clean": "rm -rf dist",
     "dev": "next dev app",
-    "start": "firebase emulators:start",
+    "emulator": "cross-env EMULATOR=true run-p --print-label emulator:*",
+    "emulator:next": "next dev app",
+    "emulator:firebase": "firebase emulators:start --import=./emulator_data/debug --export-on-exit",
     "build:client": "run-s build:client:*",
     "build:client:build": "next build app",
     "build:client:static-export": "next export app -o dist/public",

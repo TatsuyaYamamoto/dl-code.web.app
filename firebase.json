@@ -9,22 +9,11 @@
   },
   "hosting": {
     "public": "dist/public",
-    // https://firebase.google.com/docs/hosting/full-config#control_html_extensions
-    // true の場合、Hosting はアップロードされたファイルの URL から拡張子 .html を自動的に削除します。
-    // Next.jsのSSGを使用しているため、htmlとその他のリソースのURLの形式を合わせるために、.htmlを削除する
     "cleanUrls": true,
-    // https://firebase.google.com/docs/hosting/full-config#control_trailing_slashes
-    // false の場合、Hosting は URL のリダイレクトで末尾のスラッシュを削除します。
-    // Next.jsはdefaultで"/"ありのURLから"/"なしのURLへリダイレクトする (SSRの範囲)
-    // Next.jsのSSGでも同等のふるまいになるために, `"trailingSlash": false`を設定する。
-    // 【現実話】
-    // 配布済みDLCodeSheetは末尾に"/"を含んでいるため、"/"あり、"/"なしのURLが混在してしまっているので、この設定で"/"なしに統一させることは必須。
     "trailingSlash": false,
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "redirects": [
       {
-        // next.jsのSSR上で動くrouterはtrailing slashを使用できない
-        // 配布済みDLCodeSheetは末尾に"/"を含んでいるため、redirectして対応する
         "source": "/d",
         "destination": "/download/verify",
         "type": 302
@@ -43,5 +32,25 @@
   },
   "storage": {
     "rules": "firebase/storage.rules"
+  },
+  "emulators": {
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 5002
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "storage": {
+      "port": 5003
+    },
+    "auth": {
+      "port": 5004
+    },
+    "ui": {
+      "enabled": true
+    }
   }
 }

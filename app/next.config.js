@@ -16,25 +16,26 @@ if (isProduction) {
 const env = {
   version: `v${packageJson.version}.${gitRev}`,
   nodeEnv: process.env.NODE_ENV,
+  emulator: process.env.EMULATOR,
   noIndex: true,
   gaTrackingId: "UA-127664761-5",
   title: "DEVELOPMENT DLCode",
   keyword: "DLCode,ダウンロードコード",
   description:
-    "DLCodeはファイルの配布、ダウンロード用のコードの発行が行えるアプリです。ダウンロードコードをお持ちの方のみ、ファイルをダウンロードすることが出来ます。"
+    "DLCodeはファイルの配布、ダウンロード用のコードの発行が行えるアプリです。ダウンロードコードをお持ちの方のみ、ファイルをダウンロードすることが出来ます。",
 };
 
 if (isProduction) {
   Object.assign(env, {
     noIndex: false,
-    title: "DLCode"
+    title: "DLCode",
   });
 }
 
 module.exports = {
   env,
-  exportPathMap: async defaultPathMap => {
+  exportPathMap: async (defaultPathMap) => {
     const pathMap = { ...defaultPathMap };
     return pathMap;
-  }
+  },
 };
