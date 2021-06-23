@@ -13,17 +13,6 @@ if (isProduction) {
   );
 }
 
-const isNextBuildCommand = process.argv[2] === "build";
-const isNextExportCommand = process.argv[2] === "export";
-
-if (isNextBuildCommand) {
-  console.log("[next.config.js] detect `next build` command");
-}
-
-if (isNextExportCommand) {
-  console.log("[next.config.js] detect `next export` command");
-}
-
 const env = {
   version: `v${packageJson.version}.${gitRev}`,
   nodeEnv: process.env.NODE_ENV,
