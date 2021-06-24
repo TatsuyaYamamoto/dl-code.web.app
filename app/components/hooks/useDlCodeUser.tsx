@@ -9,6 +9,7 @@ import {
 import useFirebase from "./useFirebase";
 import useAuth0 from "./useAuth0";
 import { DlCodeUser, DlCodeUserDocument } from "../../domains/DlCodeUser";
+import { initUser as initUserApi } from "../../utils/api";
 
 export type SessionState = "processing" | "loggedIn" | "loggedOut";
 
@@ -28,7 +29,7 @@ export const DlCodeUserContextProvider: React.FC<{}> = (props) => {
   const [contextValue, setContextValue] = useState<IDlCodeUserContext>({
     sessionState: "processing",
   });
-  const { app: firebaseApp, initUser } = useFirebase();
+  const { app: firebaseApp } = useFirebase();
   const { initialized: isAuth0Initialized, user: auth0User } = useAuth0();
 
   const handleLogout = () => {
@@ -74,7 +75,15 @@ export const DlCodeUserContextProvider: React.FC<{}> = (props) => {
           log(`DLCode user found. end login-flow. uid: ${uid} `);
           handleLogin(user);
         } else {
-          initUser(uid);
+          Promise.resolve()
+            .then(() => firebaseApp.auth().currentUser?.getIdToken())
+            .then((idToken) => {
+              if (!idToken) {
+                throw new Error("unexpected. no id token");
+              }
+              return initUserApi({ uid, idToken });
+            });
+
           log(
             `no DLCode user is on db. wait for backend to create new DLCode user. uid: ${uid} `
           );
