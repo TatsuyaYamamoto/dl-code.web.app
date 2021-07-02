@@ -1,29 +1,44 @@
 import firebase from "firebase/app";
 import * as base32 from "hi-base32";
+import type { firestore as adminFirestoreType } from "firebase-admin";
 
 type DocumentReference = firebase.firestore.DocumentReference;
+export type DownloadCodeSetColRef<DateType> =
+  firebase.firestore.CollectionReference<DownloadCodeSetDocument<DateType>>;
 type Timestamp = firebase.firestore.Timestamp;
-type FieldValue = firebase.firestore.FieldValue;
 
-export interface DownloadCodeSetDocument {
+export interface DownloadCodeSetDocument<DateType = Timestamp> {
   productRef: DocumentReference;
   // TODO: check permission to handle code resources
   codes: {
     [value: string]: boolean;
   };
   description: string | null;
-  createdAt: Date | FieldValue;
-  expiredAt: Date | FieldValue;
+  createdAt: DateType;
+  expiredAt: DateType;
 }
 
-export class DownloadCodeSet implements DownloadCodeSetDocument {
+export const getColRef = <DateType = Timestamp>(
+  firestoreInstance:
+    | firebase.firestore.Firestore
+    | adminFirestoreType.Firestore = firebase.firestore()
+) => {
+  return firestoreInstance.collection(
+    `downloadCodeSets`
+  ) as DownloadCodeSetColRef<DateType>;
+};
+
+/**
+ * @deprecated
+ */
+export class DownloadCodeSet implements DownloadCodeSetDocument<Date> {
   // TODO: remove dependency of firestore instance.
   public static getColRef() {
     return firebase.firestore().collection(`downloadCodeSets`);
   }
 
   public static getDocRef(id: string) {
-    return DownloadCodeSet.getColRef().doc(id);
+    return getColRef().doc(id);
   }
 
   public static watchListByProductRef(
@@ -44,39 +59,13 @@ export class DownloadCodeSet implements DownloadCodeSetDocument {
           data.productRef,
           data.codes,
           data.description,
-          (data.createdAt as Timestamp).toDate(),
-          (data.expiredAt as Timestamp).toDate()
+          data.createdAt.toDate(),
+          data.expiredAt.toDate()
         );
       });
 
       callback(downloadCodeSets);
     });
-  }
-
-  /**
-   * `DownloadCode`を検証する。
-   * 正常な`DownloadCode`なら、対応する`Product`のIDを返却する
-   *
-   * @param code
-   */
-  public static async verify(code: string): Promise<{
-    productId: string;
-    expiredAt: Date;
-  } | null> {
-    const snap = await DownloadCodeSet.getColRef()
-      .where(`codes.${code}`, "==", true)
-      .get();
-
-    if (snap.empty) {
-      return null;
-    }
-
-    const doc = snap.docs[0].data() as DownloadCodeSetDocument;
-
-    return {
-      productId: doc.productRef.id,
-      expiredAt: (doc.expiredAt as Timestamp).toDate(),
-    };
   }
 
   /**
@@ -102,14 +91,14 @@ export class DownloadCodeSet implements DownloadCodeSetDocument {
 
     const now = new Date();
 
-    const newSetDocDate: DownloadCodeSetDocument = {
+    const newSetDocDate: DownloadCodeSetDocument<Date> = {
       productRef,
       codes: newCodes,
       createdAt: now,
       description: null,
       expiredAt,
     };
-    await DownloadCodeSet.getColRef().add(newSetDocDate);
+    await getColRef<Date>().add(newSetDocDate);
   }
 
   /**

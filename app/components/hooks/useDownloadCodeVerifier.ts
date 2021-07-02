@@ -12,6 +12,7 @@ import {
 import { Product } from "../../domains/Product";
 import useAuditLogger from "./useAuditLogger";
 import useFirebase from "./useFirebase";
+import { verifyDownloadCode as verifyDownloadCodeApi } from "../../utils/api";
 
 type FirebaseApp = firebase.app.App;
 type Timestamp = firebase.firestore.Timestamp;
@@ -90,10 +91,12 @@ const useDownloadCodeVerifier = (preventLoadActives: boolean = false) => {
    * @param code
    */
   const verifyDownloadCode = async (code: string) => {
-    const result = await DownloadCodeSet.verify(code);
+    const result = await verifyDownloadCodeApi({
+      downloadCode: code,
+    });
 
     // TODO: check code is expired too!
-    if (!result) {
+    if (!result.valid) {
       const e = new Error("provided code is not valid.");
 
       errorAudit({
@@ -104,7 +107,7 @@ const useDownloadCodeVerifier = (preventLoadActives: boolean = false) => {
       throw e;
     }
 
-    const { productId: verifiedProductId, expiredAt } = result;
+    const { productId: verifiedProductId, expiredAt } = result.data;
 
     const db = new DlCodeDb();
     const targetProduct = await db.getProductById(verifiedProductId);
