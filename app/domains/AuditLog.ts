@@ -1,14 +1,20 @@
 import firebase from "firebase/app";
+import { firestore as adminFirestoreType } from "firebase-admin";
 
-type FieldValue = firebase.firestore.FieldValue;
+type Timestamp = firebase.firestore.Timestamp;
+
+export type AuditLogColRef<DateType> = firebase.firestore.CollectionReference<
+  AuditLogDocument<DateType>
+>;
 
 export enum LogType {
   ACTIVATE_WITH_DOWNLOAD_CODE = "ACTIVATE_WITH_DOWNLOAD_CODE",
   DOWNLOAD_PRODUCT_FILE = "DOWNLOAD_PRODUCT_FILE",
   PLAY_PRODUCT_FILE = "DOWNLOAD_PRODUCT_FILE",
+  EXCEPTION = "EXCEPTION",
 }
 
-export interface AuditLogDocument {
+export interface AuditLogDocument<DateType = Timestamp> {
   // who
   userId:
     | string // login user
@@ -18,7 +24,7 @@ export interface AuditLogDocument {
   type: LogType;
 
   // when
-  createdAt: Date | FieldValue;
+  createdAt: DateType;
 
   // where
   href: string;
@@ -29,6 +35,9 @@ export interface AuditLogDocument {
 
   // results
   ok: boolean;
+
+  // error
+  fatal?: boolean;
   error?: {
     name: string;
     message: string;
@@ -36,6 +45,10 @@ export interface AuditLogDocument {
   };
 }
 
-export const getColRef = () => {
-  return firebase.firestore().collection(`auditLogs`);
+export const getColRef = <DateType = Timestamp>(
+  firestoreInstance:
+    | firebase.firestore.Firestore
+    | adminFirestoreType.Firestore = firebase.firestore()
+) => {
+  return firestoreInstance.collection(`auditLogs`) as AuditLogColRef<DateType>;
 };

@@ -4,6 +4,9 @@ import * as firebaseAdmin from "firebase-admin";
 
 // Initial Firebase App
 const firebaseApp = firebaseAdmin.initializeApp();
+firebaseApp.firestore().settings({
+  ignoreUndefinedProperties: true,
+});
 
 /* eslint-disable import/first */
 import { getExpressInstance } from "./api";

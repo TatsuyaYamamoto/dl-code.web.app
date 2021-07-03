@@ -1,5 +1,6 @@
 import configs from "../configs";
 import type { VerifyResult } from "../functions/api/controller/dto/VerifyResult";
+import { AuditLogDocument } from "../domains/AuditLog";
 
 export const initUser = (params: { uid: string; idToken: string }) => {
   return fetch(`${configs.apiBaseUrl}/api/users/${params.uid}/init`, {
@@ -47,4 +48,14 @@ export const verifyDownloadCode = (params: {
         },
       };
     });
+};
+
+export const sendAuditLog = (
+  params: Omit<AuditLogDocument, "createdAt">
+): boolean => {
+  // https://stackoverflow.com/a/31355857
+  const data = new Blob([JSON.stringify(params)], {
+    type: "application/json",
+  });
+  return navigator.sendBeacon(`${configs.apiBaseUrl}/api/audit-logs`, data);
 };

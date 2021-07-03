@@ -16,7 +16,15 @@ const createNestApp = async () => {
   app.useGlobalPipes(new ValidationPipe());
   app.use(helmet());
   app.use(morgan("combined"));
-  app.enableCors();
+  app.enableCors({
+    // TODO define origin according to env
+    origin: [
+      "https://dl-code.web.app",
+      "https://dl-code-dev.web.app",
+      "http://localhost:3000",
+    ],
+    credentials: true,
+  });
   await app.init();
   return app;
 };
