@@ -28,6 +28,14 @@ export const getColRef = <DateType = Timestamp>(
   ) as DownloadCodeSetColRef<DateType>;
 };
 
+export interface IDownloadCode {
+  readonly downloadCodeSetId: string;
+  readonly productId: string;
+  readonly description: string | null;
+  readonly createdAt: Date;
+  readonly expiredAt: Date;
+}
+
 /**
  * @deprecated
  */

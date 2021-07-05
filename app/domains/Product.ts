@@ -1,8 +1,12 @@
 import firebase from "firebase/app";
 import { v4 as uuid } from "uuid";
+import { firestore as adminFirestoreType } from "firebase-admin";
 
 type Firestore = firebase.firestore.Firestore;
 type DocumentReference = firebase.firestore.DocumentReference;
+export type ProductColRef<DateType> = firebase.firestore.CollectionReference<
+  ProductDocument<DateType>
+>;
 type Timestamp = firebase.firestore.Timestamp;
 type UpdateData = firebase.firestore.UpdateData;
 type FieldValue = firebase.firestore.FieldValue;
@@ -61,7 +65,7 @@ export interface ProductFileMap {
   [id: string]: ProductFile;
 }
 
-export interface ProductDocument {
+export interface ProductDocument<DateType = Timestamp> {
   name: ProductName;
   /**
    * @see storage#Reference#toString()
@@ -70,10 +74,55 @@ export interface ProductDocument {
   description: ProductDescription;
   productFiles: ProductFileMap;
   ownerUid: string;
-  createdAt: Date | FieldValue;
+  createdAt: DateType;
 }
 
-export class Product implements ProductDocument {
+export const getColRef = <DateType = Timestamp>(
+  firestoreInstance:
+    | firebase.firestore.Firestore
+    | adminFirestoreType.Firestore = firebase.firestore()
+) => {
+  return firestoreInstance.collection(`products`) as ProductColRef<DateType>;
+};
+
+const cachedIconUrls: { [iconStorageUrl: string]: string } = {};
+
+export const getIconUrl = async (iconStorageUrl: string): Promise<string> => {
+  if (cachedIconUrls[iconStorageUrl]) {
+    return cachedIconUrls[iconStorageUrl];
+  }
+
+  cachedIconUrls[iconStorageUrl] = await firebase
+    .storage()
+    .refFromURL(iconStorageUrl)
+    .getDownloadURL();
+
+  return cachedIconUrls[iconStorageUrl];
+};
+
+export interface IProductFile {
+  displayName: string;
+  storageUrl: string;
+  size: number;
+  contentType: string;
+  originalName: string;
+  index: number;
+}
+
+export interface IProduct {
+  readonly id: string;
+  readonly name: string;
+  readonly iconStorageUrl: string | null;
+  readonly description: string;
+  readonly ownerUid: string;
+  readonly productFiles: { [id: string]: IProductFile };
+  readonly createdAt: Date;
+}
+
+/**
+ * @deprecated
+ */
+export class Product implements ProductDocument<Date> {
   public static getColRef(firestoreInstance: Firestore) {
     return firestoreInstance.collection(`products`);
   }
@@ -209,7 +258,7 @@ export class Product implements ProductDocument {
       return;
     }
 
-    const newProductDoc: ProductDocument = {
+    const newProductDoc: ProductDocument<FieldValue> = {
       name,
       iconStorageUrl: null,
       description,

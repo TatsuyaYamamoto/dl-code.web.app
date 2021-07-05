@@ -1,26 +1,48 @@
 import * as firebaseAdmin from "firebase-admin";
 import { Injectable } from "@nestjs/common";
 
-import { getColRef as getDownloadCodeSetsColRef } from "../../../domains/DownloadCodeSet";
+import {
+  DownloadCodeSetDocument,
+  getColRef as getDownloadCodeSetsColRef,
+} from "../../../domains/DownloadCodeSet";
+import { ProductDocument } from "../../../domains/Product";
 
 @Injectable()
 export class DownloadCodeService {
-  async verify(
-    downloadCode: string
-  ): Promise<{ productId: string; expiredAt: Date } | undefined> {
-    const snap = await getDownloadCodeSetsColRef(firebaseAdmin.firestore())
+  async verify(downloadCode: string): Promise<
+    | {
+        downloadCodeSetId: string;
+        downloadCode: DownloadCodeSetDocument;
+        productId: string;
+        product: ProductDocument;
+      }
+    | undefined
+  > {
+    const downloadCodeSetsSnap = await getDownloadCodeSetsColRef(
+      firebaseAdmin.firestore()
+    )
       .where(`codes.${downloadCode}`, "==", true)
       .get();
 
-    if (snap.empty) {
+    if (downloadCodeSetsSnap.empty) {
       return;
     }
 
-    const doc = snap.docs[0].data();
+    const downloadCodeDoc = downloadCodeSetsSnap.docs[0].data();
+    const productSnap = await downloadCodeDoc.productRef.get();
+    const productDoc = productSnap.data() as ProductDocument | undefined;
+
+    if (!productDoc) {
+      throw new Error(
+        "unexpected error. there is no product related to download code"
+      );
+    }
 
     return {
-      productId: doc.productRef.id,
-      expiredAt: doc.expiredAt.toDate(),
+      downloadCodeSetId: downloadCodeSetsSnap.docs[0].id,
+      downloadCode: downloadCodeDoc,
+      productId: productSnap.id,
+      product: productDoc,
     };
   }
 }

@@ -15,7 +15,7 @@ import LinkButton from "../atoms/LinkButton";
 import ThumbnailImage from "../atoms/ProductImageThumbnailImage";
 import NoImage from "../atoms/ProductImageThumbnailNoImage";
 
-import { Product } from "../../domains/Product";
+import { IProduct, getIconUrl } from "../../domains/Product";
 
 const CARD_WIDTH = 200;
 
@@ -24,19 +24,19 @@ const StyledCard = styled(Card as React.FC<CardProps>)`
 `;
 
 interface PanelItemProps {
-  product: Product;
+  product: IProduct;
   onClick: (id: string) => void;
 }
 const PanelItem: React.FC<PanelItemProps> = ({ product, onClick }) => {
   const [iconUrl, setIconUrl] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    product.getIconUrl().then((url) => {
-      setIconUrl(url);
-    });
-    // TODO
-    // eslint-disable-next-line
-  }, []);
+    if (product.iconStorageUrl) {
+      getIconUrl(product.iconStorageUrl).then((url) => {
+        setIconUrl(url);
+      });
+    }
+  }, [product]);
 
   const onCardClicked = () => {
     onClick(product.id);
@@ -68,7 +68,7 @@ const EmptyInfo = styled.div`
 `;
 
 interface ActivatedProductListProps {
-  products: Product[];
+  products: IProduct[];
   onPanelClicked: (selectedId: string) => void;
 }
 

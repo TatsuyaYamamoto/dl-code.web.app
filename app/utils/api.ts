@@ -1,6 +1,8 @@
 import configs from "../configs";
-import type { VerifyResult } from "../functions/api/controller/dto/VerifyResult";
+import type { ActivatedProductsDto } from "../functions/api/controller/dto/ActivatedProductsDto";
 import { AuditLogDocument } from "../domains/AuditLog";
+import { IProduct } from "../domains/Product";
+import { IDownloadCode } from "../domains/DownloadCodeSet";
 
 export const initUser = (params: { uid: string; idToken: string }) => {
   return fetch(`${configs.apiBaseUrl}/api/users/${params.uid}/init`, {
@@ -11,42 +13,45 @@ export const initUser = (params: { uid: string; idToken: string }) => {
   });
 };
 
-export const verifyDownloadCode = (params: {
-  downloadCode: string;
-}): Promise<
-  | { valid: false }
-  | {
-      valid: true;
-      data: {
-        productId: string;
-        expiredAt: Date;
-      };
-    }
-> => {
-  return fetch(`${configs.apiBaseUrl}/api/download-code/verify`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      downloadCode: params.downloadCode,
-    }),
-  })
+export const getProductsByDownloadCode = (
+  codes: string[]
+): Promise<{
+  [code: string]: { product: IProduct; downloadCode: IDownloadCode };
+}> => {
+  const query = `?codes=${codes.join(",")}`;
+  return fetch(`${configs.apiBaseUrl}/api/products/activated${query}`)
     .then((res) => res.json())
-    .then((result: VerifyResult) => {
-      if (!result.valid || !result.data) {
-        return {
-          valid: false,
-        };
-      }
+    .then((dto: ActivatedProductsDto) => {
+      const result: {
+        [code: string]: { product: IProduct; downloadCode: IDownloadCode };
+      } = {};
 
-      return {
-        valid: true,
-        data: {
-          productId: result.data.productId,
-          expiredAt: new Date(result.data.expiredAt),
-        },
-      };
+      Object.keys(dto).forEach((code) => {
+        const verifyResult = dto[code];
+        if (!verifyResult) {
+          return;
+        }
+        const { product, downloadCode } = verifyResult;
+        result[code] = {
+          product: {
+            id: product.id,
+            name: product.name,
+            iconStorageUrl: product.iconStorageUrl,
+            description: product.description,
+            productFiles: product.productFiles,
+            ownerUid: product.ownerUid,
+            createdAt: new Date(product.createdAt),
+          },
+          downloadCode: {
+            downloadCodeSetId: downloadCode.downloadCodeSetId,
+            productId: downloadCode.productId,
+            description: downloadCode.description,
+            createdAt: new Date(downloadCode.createdAt),
+            expiredAt: new Date(downloadCode.expiredAt),
+          },
+        };
+      });
+      return result;
     });
 };
 

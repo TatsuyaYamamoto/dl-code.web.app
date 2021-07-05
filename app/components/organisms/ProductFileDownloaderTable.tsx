@@ -8,7 +8,7 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   Paper,
-  Typography
+  Typography,
 } from "@material-ui/core";
 import DownloadIcon from "@material-ui/icons/ArrowDownward";
 import PlayIcon from "@material-ui/icons/PlayArrow";
@@ -17,12 +17,12 @@ import { useSnackbar } from "notistack";
 
 import { LogType } from "../../domains/AuditLog";
 
-import { ProductFile } from "../../domains/Product";
+import { IProductFile } from "../../domains/Product";
 
 import { formatFileSize } from "../../utils/format";
 import {
   downloadFromFirebaseStorage,
-  getStorageObjectDownloadUrl
+  getStorageObjectDownloadUrl,
 } from "../../utils/network";
 
 import AudioWaveIcon from "../atoms/AudioWaveIcon";
@@ -53,7 +53,7 @@ const ProductFileListItem: React.FC<ProductFileListItemProps> = ({
   canPlay,
   state,
   onStart,
-  onDownload
+  onDownload,
 }) => {
   const onPlayIconClicked = (_: React.MouseEvent<HTMLButtonElement>) => {
     onStart();
@@ -107,11 +107,11 @@ type PlayerState =
 
 interface ProductFileDownloaderTableProps {
   productId: string;
-  files: { [id: string]: ProductFile };
+  files: { [id: string]: IProductFile };
 }
 const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
   productId,
-  files
+  files,
 }) => {
   const { getByProductId } = useDownloadCodeVerifier();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -126,7 +126,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
 
     // TODO: show progress status
     const snackBarKey = enqueueSnackbar(`${originalName}をダウンロード中...`, {
-      persist: true
+      persist: true,
     });
 
     if (snackBarKey === null) {
@@ -138,7 +138,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
       closeSnackbar(snackBarKey);
 
       getByProductId(productId)
-        .then(product => {
+        .then((product) => {
           if (!product) {
             throw new Error(
               "unexpected error. start product file was not found."
@@ -153,8 +153,8 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
             params: {
               storageUrl,
               originalName,
-              downloadCode
-            }
+              downloadCode,
+            },
           });
         });
     });
@@ -166,7 +166,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
     const url = await getStorageObjectDownloadUrl(storageUrl);
 
     getByProductId(productId)
-      .then(product => {
+      .then((product) => {
         if (!product) {
           throw new Error(
             "unexpected error. start product file was not found."
@@ -178,7 +178,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
       .then(({ downloadCode }) => {
         okAudit({
           type: LogType.PLAY_PRODUCT_FILE,
-          params: { productFileId: fileId, downloadCode, url }
+          params: { productFileId: fileId, downloadCode, url },
         });
       });
 
@@ -202,10 +202,10 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
   const data = useMemo(
     () =>
       Object.keys(files)
-        .map(id => {
+        .map((id) => {
           return {
             id,
-            file: files[id]
+            file: files[id],
           };
         })
         .sort((a, b) => {
@@ -223,7 +223,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
             // TODO!
             canPlay: ["audio/mp3", "audio/x-m4a", "audio/mpeg"].includes(
               file.contentType
-            )
+            ),
           };
         }),
     [files]
