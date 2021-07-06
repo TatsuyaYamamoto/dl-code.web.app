@@ -13,46 +13,51 @@ export const initUser = (params: { uid: string; idToken: string }) => {
   });
 };
 
-export const getProductsByDownloadCode = (
+export const getProductsByDownloadCode = async (
   codes: string[]
 ): Promise<{
   [code: string]: { product: IProduct; downloadCode: IDownloadCode };
 }> => {
   const query = `?codes=${codes.join(",")}`;
-  return fetch(`${configs.apiBaseUrl}/api/products/activated${query}`)
-    .then((res) => res.json())
-    .then((dto: ActivatedProductsDto) => {
-      const result: {
-        [code: string]: { product: IProduct; downloadCode: IDownloadCode };
-      } = {};
+  const res = await fetch(
+    `${configs.apiBaseUrl}/api/products/activated${query}`
+  );
+  if (!res.ok) {
+    return {};
+  }
 
-      Object.keys(dto).forEach((code) => {
-        const verifyResult = dto[code];
-        if (!verifyResult) {
-          return;
-        }
-        const { product, downloadCode } = verifyResult;
-        result[code] = {
-          product: {
-            id: product.id,
-            name: product.name,
-            iconStorageUrl: product.iconStorageUrl,
-            description: product.description,
-            productFiles: product.productFiles,
-            ownerUid: product.ownerUid,
-            createdAt: new Date(product.createdAt),
-          },
-          downloadCode: {
-            downloadCodeSetId: downloadCode.downloadCodeSetId,
-            productId: downloadCode.productId,
-            description: downloadCode.description,
-            createdAt: new Date(downloadCode.createdAt),
-            expiredAt: new Date(downloadCode.expiredAt),
-          },
-        };
-      });
-      return result;
-    });
+  const dto: ActivatedProductsDto = await res.json();
+
+  const result: {
+    [code: string]: { product: IProduct; downloadCode: IDownloadCode };
+  } = {};
+
+  for (const code of Object.keys(dto)) {
+    const verifyResult = dto[code];
+    if (!verifyResult) {
+      break;
+    }
+    const { product, downloadCode } = verifyResult;
+    result[code] = {
+      product: {
+        id: product.id,
+        name: product.name,
+        iconStorageUrl: product.iconStorageUrl,
+        description: product.description,
+        productFiles: product.productFiles,
+        ownerUid: product.ownerUid,
+        createdAt: new Date(product.createdAt),
+      },
+      downloadCode: {
+        downloadCodeSetId: downloadCode.downloadCodeSetId,
+        productId: downloadCode.productId,
+        description: downloadCode.description,
+        createdAt: new Date(downloadCode.createdAt),
+        expiredAt: new Date(downloadCode.expiredAt),
+      },
+    };
+  }
+  return result;
 };
 
 export const sendAuditLog = (

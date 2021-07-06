@@ -67,8 +67,12 @@ const useDownloadCodeVerifier = () => {
   const loadFromDb = useCallback(async () => {
     const activeProducts = await db.activeProducts.toArray();
     const codes = activeProducts.map(({ downloadCode }) => downloadCode);
-    const verifyResults = await getProductsByDownloadCodeApi(codes);
 
+    if (codes.length === 0) {
+      return;
+    }
+
+    const verifyResults = await getProductsByDownloadCodeApi(codes);
     const actives = codes
       .filter((code) => verifyResults[code])
       .map((code) => {
