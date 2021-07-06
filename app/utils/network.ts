@@ -23,54 +23,21 @@ export const getStorageObjectDownloadUrl = (storageUrl: string) => {
 
 export const downloadFromFirebaseStorage = async (
   storageUrl: string,
-  originalName: string,
-  onProgressCallBack?: (percentComplete: number) => void
+  originalName: string
 ): Promise<void> => {
   const downloadUrl = await getStorageObjectDownloadUrl(storageUrl);
 
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.responseType = "blob";
+  const res = await fetch(downloadUrl);
 
-    const onProgress = (event: ProgressEvent) => {
-      const { loaded, total, lengthComputable } = event;
+  // chrome 91.0.4472.114（Official Build）の環境でblob()がコケるのでarrayBuffer経由で読み込む (safari, iOS13.5ではコケない)
+  // const blob = await res.blob();
+  const arrayBuffer = await res.arrayBuffer();
+  const blob = new Blob([arrayBuffer]);
 
-      if (lengthComputable) {
-        const percentComplete = (loaded / total) * 100;
-
-        if (onProgressCallBack) {
-          onProgressCallBack(percentComplete);
-        }
-      } else {
-        // 全体の長さが不明なため、進捗情報を計算できない
-      }
-    };
-
-    const onLoad = (_: ProgressEvent) => {
-      const blob = xhr.response;
-      const a = document.createElement("a");
-      a.download = originalName;
-      a.href = window.URL.createObjectURL(blob);
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-
-      resolve();
-    };
-
-    const onError = (event: ProgressEvent) => {
-      reject(event);
-    };
-
-    const onAbort = (_: ProgressEvent) => {
-      resolve();
-    };
-
-    xhr.addEventListener("progress", onProgress);
-    xhr.addEventListener("load", onLoad);
-    xhr.addEventListener("error", onError);
-    xhr.addEventListener("abort", onAbort);
-    xhr.open("GET", downloadUrl);
-    xhr.send();
-  });
+  const a = document.createElement("a");
+  a.download = originalName;
+  a.href = window.URL.createObjectURL(blob);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 };

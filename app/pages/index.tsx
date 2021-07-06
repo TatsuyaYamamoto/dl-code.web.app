@@ -1,11 +1,9 @@
-import React, { useMemo } from "react";
+import React from "react";
 
 import { Container, Grid, Typography } from "@material-ui/core";
 import Icon, { IconProps } from "@material-ui/core/Icon";
 
 import styled from "styled-components";
-
-import { format as dateFormat } from "date-fns";
 
 import LinkButton from "../components/atoms/LinkButton";
 import Logo from "../components/atoms/Logo";
@@ -53,8 +51,6 @@ const AboutAppSection = () => {
   const logo = <Logo />;
   const book = <Icon>book</Icon>;
   const disk = <Icon>album</Icon>;
-  const now = useMemo(() => dateFormat(new Date(), "yyyy/MM/dd"), []);
-  const t28Link = <a href={`https://twitter.com/T28_tatsuya`}>@T28_tatsuya</a>;
 
   return (
     <>
@@ -69,19 +65,6 @@ const AboutAppSection = () => {
         </Typography>
       </Grid>
       <Space />
-      <Grid item={true}>
-        <Typography variant="h5">だれが使えるの？</Typography>
-        <Typography variant="h6">ダウンロード</Typography>
-        <Typography variant="body1">
-          <span>{`>> 誰でも！`}</span>
-        </Typography>
-        <Typography variant="h6">ファイル配信</Typography>
-        <Typography variant="body1">
-          {`>> ${now}時点では誰でも管理ページを使用することが出来ますが、無保証(`}
-          {t28Link}
-          {`が使用する品質まで)です。`}
-        </Typography>
-      </Grid>
     </>
   );
 };
