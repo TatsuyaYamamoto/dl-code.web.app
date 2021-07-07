@@ -18,7 +18,7 @@ interface Product {
     };
   };
   ownerUid: string;
-  iconStorageUrl: string | null;
+  iconDownloadUrl: string | null;
   createdAt: string;
 }
 

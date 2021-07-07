@@ -1,7 +1,9 @@
 import { Controller, Query, Get, BadRequestException } from "@nestjs/common";
 
-import { DownloadCodeService } from "../services/download-code.service";
 import { ActivatedProductsDto } from "./dto/ActivatedProductsDto";
+import { DownloadCodeService } from "../services/download-code.service";
+
+import { getUnsignedDownloadUrl } from "../../utils/firebase";
 
 @Controller("products")
 export class ProductController {
@@ -19,43 +21,45 @@ export class ProductController {
       Array.isArray(queryCodes) ? queryCodes[0] : queryCodes
     ).split(",");
 
-    const verifyResults = await Promise.all(
+    const dto: ActivatedProductsDto = {};
+    await Promise.all(
       codes.map(async (code) => {
-        const verifyResult = await this.downloadCodeService.verify(code);
-        return {
-          code,
-          verifyResult,
-        };
+        dto[code] = await this.verify(code);
       })
     );
 
-    const dto: ActivatedProductsDto = {};
-    verifyResults.forEach(({ code, verifyResult }) => {
-      if (!verifyResult) {
-        dto[code] = undefined;
-        return;
-      }
-
-      dto[code] = {
-        product: {
-          id: verifyResult.productId,
-          name: verifyResult.product.name,
-          description: verifyResult.product.description,
-          productFiles: verifyResult.product.productFiles,
-          ownerUid: verifyResult.product.ownerUid,
-          iconStorageUrl: verifyResult.product.iconStorageUrl,
-          createdAt: verifyResult.product.createdAt.toDate().toISOString(),
-        },
-        downloadCode: {
-          downloadCodeSetId: verifyResult.downloadCodeSetId,
-          productId: verifyResult.downloadCode.productRef.id,
-          description: verifyResult.downloadCode.description,
-          createdAt: verifyResult.downloadCode.createdAt.toDate().toISOString(),
-          expiredAt: verifyResult.downloadCode.expiredAt.toDate().toISOString(),
-        },
-      };
-    });
-
     return dto;
   }
+
+  private verify = async (code: string) => {
+    const verifyResult = await this.downloadCodeService.verify(code);
+    if (!verifyResult) {
+      return undefined;
+    }
+
+    const { productId, product, downloadCodeSetId, downloadCode } =
+      verifyResult;
+    const iconUrl = product.iconStorageUrl
+      ? await getUnsignedDownloadUrl(product.iconStorageUrl)
+      : null;
+
+    return {
+      product: {
+        id: productId,
+        name: product.name,
+        description: product.description,
+        productFiles: product.productFiles,
+        ownerUid: product.ownerUid,
+        iconDownloadUrl: iconUrl,
+        createdAt: product.createdAt.toDate().toISOString(),
+      },
+      downloadCode: {
+        downloadCodeSetId: downloadCodeSetId,
+        productId: downloadCode.productRef.id,
+        description: downloadCode.description,
+        createdAt: downloadCode.createdAt.toDate().toISOString(),
+        expiredAt: downloadCode.expiredAt.toDate().toISOString(),
+      },
+    };
+  };
 }

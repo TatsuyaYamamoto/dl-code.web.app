@@ -85,21 +85,6 @@ export const getColRef = <DateType = Timestamp>(
   return firestoreInstance.collection(`products`) as ProductColRef<DateType>;
 };
 
-const cachedIconUrls: { [iconStorageUrl: string]: string } = {};
-
-export const getIconUrl = async (iconStorageUrl: string): Promise<string> => {
-  if (cachedIconUrls[iconStorageUrl]) {
-    return cachedIconUrls[iconStorageUrl];
-  }
-
-  cachedIconUrls[iconStorageUrl] = await firebase
-    .storage()
-    .refFromURL(iconStorageUrl)
-    .getDownloadURL();
-
-  return cachedIconUrls[iconStorageUrl];
-};
-
 export interface IProductFile {
   displayName: string;
   storageUrl: string;
@@ -112,7 +97,7 @@ export interface IProductFile {
 export interface IProduct {
   readonly id: string;
   readonly name: string;
-  readonly iconStorageUrl: string | null;
+  readonly iconDownloadUrl: string | null;
   readonly description: string;
   readonly ownerUid: string;
   readonly productFiles: { [id: string]: IProductFile };

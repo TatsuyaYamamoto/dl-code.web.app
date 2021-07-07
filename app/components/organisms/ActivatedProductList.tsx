@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 
 import styled from "styled-components";
 
@@ -15,7 +15,7 @@ import LinkButton from "../atoms/LinkButton";
 import ThumbnailImage from "../atoms/ProductImageThumbnailImage";
 import NoImage from "../atoms/ProductImageThumbnailNoImage";
 
-import { IProduct, getIconUrl } from "../../domains/Product";
+import { IProduct } from "../../domains/Product";
 
 const CARD_WIDTH = 200;
 
@@ -28,15 +28,7 @@ interface PanelItemProps {
   onClick: (id: string) => void;
 }
 const PanelItem: React.FC<PanelItemProps> = ({ product, onClick }) => {
-  const [iconUrl, setIconUrl] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (product.iconStorageUrl) {
-      getIconUrl(product.iconStorageUrl).then((url) => {
-        setIconUrl(url);
-      });
-    }
-  }, [product]);
+  const iconUrl = product.iconDownloadUrl;
 
   const onCardClicked = () => {
     onClick(product.id);

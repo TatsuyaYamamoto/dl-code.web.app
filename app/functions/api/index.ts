@@ -12,6 +12,9 @@ const expressAdapter = new ExpressAdapter(expressInstance);
 let nestAppPromise: Promise<INestApplication> | null = null;
 
 const createNestApp = async () => {
+  // https://docs.nestjs.com/techniques/logger
+  process.env.NO_COLOR = "true";
+
   const app = await NestFactory.create(AppModule, expressAdapter);
   app.useGlobalPipes(new ValidationPipe());
   app.use(helmet());

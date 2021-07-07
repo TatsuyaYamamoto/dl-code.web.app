@@ -117,6 +117,7 @@ const ProductFileEditTable: React.FC<ProductFileEditTableProps> = ({
 
     const { id: productFileId } = rowData;
     const { storageUrl, originalName } = productFiles[productFileId];
+    console.log("DEBUG", storageUrl, originalName);
     downloadFromFirebaseStorage(storageUrl, originalName);
   };
 

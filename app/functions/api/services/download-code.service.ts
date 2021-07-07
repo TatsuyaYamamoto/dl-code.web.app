@@ -34,7 +34,7 @@ export class DownloadCodeService {
 
     if (!productDoc) {
       throw new Error(
-        "unexpected error. there is no product related to download code"
+        `unexpected error. there is no product related to download code. code: ${downloadCode}`
       );
     }
 

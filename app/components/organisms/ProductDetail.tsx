@@ -28,7 +28,7 @@ const StyledA = styled.a`
 
 interface ProductDetailProps {
   name: string;
-  iconUrl: string;
+  iconUrl: string | null;
   description: string;
   downloadCodeExpiredAt: Date;
 }
@@ -53,7 +53,8 @@ const ProductDetail: React.FC<ProductDetailProps> = ({
   return (
     <Grid container={true}>
       <Grid item={true}>
-        <ProductThumbnail src={iconUrl} width={200} />
+        {/* TODO use <NoImage /> */}
+        <ProductThumbnail src={iconUrl || ""} width={200} />
       </Grid>
       <Grid item={true}>
         <ProductName variant="h4">{name}</ProductName>

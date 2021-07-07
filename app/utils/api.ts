@@ -42,7 +42,7 @@ export const getProductsByDownloadCode = async (
       product: {
         id: product.id,
         name: product.name,
-        iconStorageUrl: product.iconStorageUrl,
+        iconDownloadUrl: product.iconDownloadUrl,
         description: product.description,
         productFiles: product.productFiles,
         ownerUid: product.ownerUid,
