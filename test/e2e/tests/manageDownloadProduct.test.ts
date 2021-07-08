@@ -62,7 +62,7 @@ Scenario(
 
     I.say(`Then 音声が再生される(autoplayのaudio要素が描画される)`);
     I.seeElement(
-      `audio[autoplay][controls][src^="https://firebasestorage.googleapis.com"]`
+      `audio[autoplay][controls][src^="https://storage.googleapis.com"]`
     );
 
     I.say(`And When 閉じるアイコンをクリックする`);
@@ -133,7 +133,7 @@ Scenario(
 fillFieldで文字列を入力しても、iOS Simulator上のReactでonChange eventが発生しない(多分)ため、textareaを選択 => 適当な文字列を入力のステップを追加することで
 手動でonChange eventを発生させてから後続の処理につなげる。`);
       I.click("//textarea[1]");
-      "_ios_dummy".split("").map(t => I.pressKey(t));
+      "_ios_dummy".split("").map((t) => I.pressKey(t));
     }
     I.click("送信");
     I.say(`Then 感謝ダイアログが表示される`);
