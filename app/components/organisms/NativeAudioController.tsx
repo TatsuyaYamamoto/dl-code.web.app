@@ -14,6 +14,7 @@ interface AudioPlayerProps {
   onPlay: () => void;
   onPause: () => void;
   onClose: () => void;
+  onError: (e: Error) => void;
 }
 
 const SlideTransition = (props: any) => {
@@ -26,6 +27,7 @@ const NativeAudioController: React.FC<AudioPlayerProps> = ({
   onPlay,
   onPause,
   onClose,
+  onError,
 }) => {
   const audioEl = useRef<HTMLAudioElement | null>(null);
 
@@ -36,15 +38,21 @@ const NativeAudioController: React.FC<AudioPlayerProps> = ({
     onPause();
   };
 
+  const onAudioError = (e: ErrorEvent) => {
+    onError(e.error);
+  };
+
   const audioRef = (el: HTMLAudioElement) => {
     if (el) {
       el.addEventListener("play", onAudioPlay);
       el.addEventListener("pause", onAudioPause);
+      el.addEventListener("error", onAudioError);
     }
 
     if (!el && audioEl.current /* prevAudioEl */) {
       audioEl.current.removeEventListener("play", onAudioPlay);
       audioEl.current.removeEventListener("pause", onAudioPause);
+      audioEl.current?.removeEventListener("error", onAudioError);
     }
 
     // save previous element

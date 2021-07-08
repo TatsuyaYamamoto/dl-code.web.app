@@ -112,3 +112,34 @@ $ gsutil cors set firebase/cors.json gs://dl-code-dev.appspot.com
 ```
 
 Ref: [https://firebase.google.com/docs/storage/web/download-files#cors_configuration](https://firebase.google.com/docs/storage/web/download-files#cors_configuration)
+
+### Firebase functions execution permission for AllUsers
+
+- ref
+  - [https://qiita.com/toshiaki_takase/items/ce65cd5582a80917b52f](https://qiita.com/toshiaki_takase/items/ce65cd5582a80917b52f)
+
+### Service account's permittion for `getSignedUrl()`
+
+[Bucket#getSignedUrl()](https://googleapis.dev/nodejs/storage/latest/Bucket.html#getSignedUrl)
+
+```shell
+Error: IAM Service Account Credentials API has not been used in project *** before or it is disabled.
+Enable it by visiting https://console.developers.google.com/apis/api/iamcredentials.googleapis.com/overview?project=*** then retry.
+If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.
+
+name: 'SigningError'
+```
+
+=> enable API
+
+```shell
+Error: The caller does not have permission
+
+name: 'SigningError'
+```
+
+=> Cloud Console > [IAM & admin](https://console.cloud.google.com/iam-admin/iam) > IAM, Find the App Engine default service account and add the Service Account Token Creator role
+
+- ref
+  - [https://firebase.google.com/support/guides/service-accounts?hl=ja](https://firebase.google.com/support/guides/service-accounts?hl=ja)
+  - [https://github.com/firebase/functions-samples/issues/782](https://github.com/firebase/functions-samples/issues/782)

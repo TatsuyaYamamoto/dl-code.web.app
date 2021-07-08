@@ -20,10 +20,7 @@ import { LogType } from "../../domains/AuditLog";
 import { IProductFile } from "../../domains/Product";
 
 import { formatFileSize } from "../../utils/format";
-import {
-  downloadFromFirebaseStorage,
-  getStorageObjectDownloadUrl,
-} from "../../utils/network";
+import { downloadByUrl } from "../../utils/network";
 
 import AudioWaveIcon from "../atoms/AudioWaveIcon";
 import LoadingIcon from "../atoms/LoadingIcon";
@@ -115,75 +112,72 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
 }) => {
   const { getByProductId } = useDownloadCodeVerifier();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { okAudit } = useAuditLogger();
+  const { okAudit, errorAudit } = useAuditLogger();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState>("none");
 
   const onDownloadClicked = (fileId: string) => async () => {
-    const { storageUrl, originalName } = files[fileId];
+    const { signedDownloadUrl, originalName } = files[fileId];
 
     // TODO: show progress status
     const snackBarKey = enqueueSnackbar(`${originalName}をダウンロード中...`, {
       persist: true,
     });
 
-    if (snackBarKey === null) {
-      // TODO: fail show snackbar. handling error.
+    const product = await getByProductId(productId);
+    const downloadCode = product?.downloadCode || "__fail_load_download_code";
+
+    try {
+      await downloadByUrl(signedDownloadUrl, originalName);
+    } catch (e) {
+      console.error(e);
+      enqueueSnackbar(`ファイルのダウンロードに失敗しました。`, {
+        variant: "error",
+      });
+      errorAudit({
+        type: LogType.EXCEPTION_FAIL_DOWNLOAD_FILE,
+        fatal: true,
+        error: e,
+        params: {
+          productId,
+          downloadCode,
+          fileId,
+          signedDownloadUrl,
+          originalName,
+        },
+      });
       return;
+    } finally {
+      closeSnackbar(snackBarKey);
     }
 
-    downloadFromFirebaseStorage(storageUrl, originalName).then(() => {
-      closeSnackbar(snackBarKey);
-
-      getByProductId(productId)
-        .then((product) => {
-          if (!product) {
-            throw new Error(
-              "unexpected error. start product file was not found."
-            );
-          }
-
-          return product;
-        })
-        .then(({ downloadCode }) => {
-          okAudit({
-            type: LogType.DOWNLOAD_PRODUCT_FILE,
-            params: {
-              storageUrl,
-              originalName,
-              downloadCode,
-            },
-          });
-        });
+    okAudit({
+      type: LogType.DOWNLOAD_PRODUCT_FILE,
+      params: {
+        signedDownloadUrl,
+        fileId,
+        originalName,
+        productId,
+        downloadCode,
+      },
     });
   };
 
   const onStartWithList = (fileId: string) => async () => {
-    const { storageUrl } = files[fileId];
+    const { signedDownloadUrl } = files[fileId];
 
-    const url = await getStorageObjectDownloadUrl(storageUrl);
-
-    getByProductId(productId)
-      .then((product) => {
-        if (!product) {
-          throw new Error(
-            "unexpected error. start product file was not found."
-          );
-        }
-
-        return product;
-      })
-      .then(({ downloadCode }) => {
-        okAudit({
-          type: LogType.PLAY_PRODUCT_FILE,
-          params: { productFileId: fileId, downloadCode, url },
-        });
+    getByProductId(productId).then((product) => {
+      const downloadCode = product?.downloadCode || "__fail_load_download_code";
+      okAudit({
+        type: LogType.PLAY_PRODUCT_FILE,
+        params: { productFileId: fileId, downloadCode, signedDownloadUrl },
       });
+    });
 
     setSelectedId(fileId);
-    setAudioUrl(url);
+    setAudioUrl(signedDownloadUrl);
   };
 
   const onPlayWithPlayer = () => {
@@ -195,6 +189,24 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
   };
 
   const onClosePlayer = () => {
+    setSelectedId(null);
+    setAudioUrl(null);
+  };
+
+  const onPlayError = (e: Error) => {
+    enqueueSnackbar(`再生に失敗しました。`, {
+      variant: "error",
+    });
+    errorAudit({
+      type: LogType.EXCEPTION_FILE_TO_PLAY_AUDIO,
+      fatal: true,
+      error: e,
+      params: {
+        productId,
+        fileId: selectedId,
+        audioUrl,
+      },
+    });
     setSelectedId(null);
     setAudioUrl(null);
   };
@@ -259,6 +271,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
         onPlay={onPlayWithPlayer}
         onPause={onPauseWithPlayer}
         onClose={onClosePlayer}
+        onError={onPlayError}
       />
     </>
   );

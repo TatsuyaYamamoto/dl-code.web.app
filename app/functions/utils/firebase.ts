@@ -1,3 +1,5 @@
+import { storage } from "firebase-admin";
+
 const parseStorageUrl = (
   storageUrl: string
 ): { bucket: string; fileName: string } => {
@@ -11,4 +13,20 @@ export const getUnsignedDownloadUrl = (storageUrl: string) => {
   const { bucket, fileName } = parseStorageUrl(storageUrl);
   const encodedFileName = encodeURIComponent(fileName);
   return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedFileName}?alt=media`;
+};
+
+export const getSignedDownloadUrl = async (
+  storageUrl: string,
+  expires: Date
+): Promise<string> => {
+  const { bucket, fileName } = parseStorageUrl(storageUrl);
+
+  const urls = await storage()
+    .bucket(bucket)
+    .file(fileName)
+    .getSignedUrl({ action: "read", expires });
+
+  // 理由不明だが、Promiseを使うときは配列で取得index:0を参照、が前提っぽい
+  // https://googleapis.dev/nodejs/storage/latest/Bucket.html#getSignedUrl
+  return urls[0];
 };

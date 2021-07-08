@@ -10,7 +10,7 @@ interface Product {
   productFiles: {
     [id: string]: {
       displayName: ProductFileDisplayName;
-      storageUrl: string;
+      signedDownloadUrl: string;
       size: number;
       contentType: string;
       originalName: ProductFileOriginalName;

@@ -87,7 +87,7 @@ export const getColRef = <DateType = Timestamp>(
 
 export interface IProductFile {
   displayName: string;
-  storageUrl: string;
+  signedDownloadUrl: string;
   size: number;
   contentType: string;
   originalName: string;

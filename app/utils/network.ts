@@ -41,3 +41,21 @@ export const downloadFromFirebaseStorage = async (
   a.click();
   document.body.removeChild(a);
 };
+
+export const downloadByUrl = async (
+  downloadUrl: string,
+  originalName: string
+): Promise<void> => {
+  const res = await fetch(downloadUrl);
+  // chrome 91.0.4472.114（Official Build）の環境でblob()がコケるのでarrayBuffer経由で読み込む (safari, iOS13.5ではコケない)
+  // const blob = await res.blob();
+  const arrayBuffer = await res.arrayBuffer();
+  const blob = new Blob([arrayBuffer]);
+
+  const a = document.createElement("a");
+  a.download = originalName;
+  a.href = window.URL.createObjectURL(blob);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+};

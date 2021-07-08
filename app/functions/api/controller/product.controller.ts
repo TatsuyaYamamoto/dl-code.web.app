@@ -3,7 +3,15 @@ import { Controller, Query, Get, BadRequestException } from "@nestjs/common";
 import { ActivatedProductsDto } from "./dto/ActivatedProductsDto";
 import { DownloadCodeService } from "../services/download-code.service";
 
-import { getUnsignedDownloadUrl } from "../../utils/firebase";
+import {
+  getUnsignedDownloadUrl,
+  getSignedDownloadUrl,
+} from "../../utils/firebase";
+import addHours from "date-fns/addHours";
+import { DownloadCodeSetDocument } from "../../../domains/DownloadCodeSet";
+import { ProductDocument } from "../../../domains/Product";
+
+const PRODUCT_FILE_URL_VALIDITY_PERIOD_HOURS = 24;
 
 @Controller("products")
 export class ProductController {
@@ -21,36 +29,67 @@ export class ProductController {
       Array.isArray(queryCodes) ? queryCodes[0] : queryCodes
     ).split(",");
 
-    const dto: ActivatedProductsDto = {};
-    await Promise.all(
-      codes.map(async (code) => {
-        dto[code] = await this.verify(code);
-      })
+    const fileUrlExpireDate = addHours(
+      new Date(),
+      PRODUCT_FILE_URL_VALIDITY_PERIOD_HOURS
     );
+    const multipleVerifyPromise = codes.map(async (code) => {
+      const verifyResult = await this.downloadCodeService.verify(code);
+      if (!verifyResult) {
+        return [code, undefined] as const;
+      }
 
-    return dto;
+      const value = await this.verifyResultToDtoPart(
+        verifyResult,
+        fileUrlExpireDate
+      );
+      return [code, value] as const;
+    });
+
+    return Object.fromEntries(await Promise.all(multipleVerifyPromise));
   }
 
-  private verify = async (code: string) => {
-    const verifyResult = await this.downloadCodeService.verify(code);
-    if (!verifyResult) {
-      return undefined;
-    }
-
+  private verifyResultToDtoPart = async (
+    verifyResult: {
+      productId: string;
+      product: ProductDocument;
+      downloadCodeSetId: string;
+      downloadCode: DownloadCodeSetDocument;
+    },
+    fileUrlExpireDate: Date
+  ) => {
     const { productId, product, downloadCodeSetId, downloadCode } =
       verifyResult;
-    const iconUrl = product.iconStorageUrl
+    const iconDownloadUrl = product.iconStorageUrl
       ? await getUnsignedDownloadUrl(product.iconStorageUrl)
       : null;
+
+    const productFileEntriesPromise = Object.entries(product.productFiles).map(
+      async ([id, productFile]) => {
+        const { storageUrl, ...others } = productFile;
+        const val = {
+          ...others,
+          signedDownloadUrl: await getSignedDownloadUrl(
+            productFile.storageUrl,
+            fileUrlExpireDate
+          ),
+        };
+        return [id, val] as const;
+      }
+    );
+
+    const productFiles = Object.fromEntries(
+      await Promise.all(productFileEntriesPromise)
+    );
 
     return {
       product: {
         id: productId,
         name: product.name,
         description: product.description,
-        productFiles: product.productFiles,
+        productFiles,
         ownerUid: product.ownerUid,
-        iconDownloadUrl: iconUrl,
+        iconDownloadUrl,
         createdAt: product.createdAt.toDate().toISOString(),
       },
       downloadCode: {
