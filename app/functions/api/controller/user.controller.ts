@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Req,
+  Body,
   Param,
   UseGuards,
   ForbiddenException,
@@ -13,6 +14,7 @@ import {
   FirebaseAuthGuard,
   FirebaseAuthGuardRequest,
 } from "../context/guards/firebase-auth.guard";
+import { UserImpressionForm } from "./form/UserImpressionForm";
 
 @Controller("users")
 export class UserController {
@@ -37,5 +39,18 @@ export class UserController {
     }
 
     return { message: "ok" };
+  }
+
+  @Post(":uid/impressions")
+  async sendImpression(
+    @Param("uid") uid: string,
+    @Body() form: UserImpressionForm
+  ): Promise<{ id: string }> {
+    const ref = await this.userService.saveImpression(
+      uid,
+      form.productId,
+      form.text
+    );
+    return { id: ref.id };
   }
 }

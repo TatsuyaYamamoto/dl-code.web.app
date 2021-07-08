@@ -3,7 +3,8 @@ import { v4 as uuid } from "uuid";
 import { firestore as adminFirestoreType } from "firebase-admin";
 
 type Firestore = firebase.firestore.Firestore;
-type DocumentReference = firebase.firestore.DocumentReference;
+export type ProductDocRef<DateType = Timestamp> =
+  firebase.firestore.DocumentReference<ProductDocument<DateType>>;
 export type ProductColRef<DateType> = firebase.firestore.CollectionReference<
   ProductDocument<DateType>
 >;
@@ -238,7 +239,7 @@ export class Product implements ProductDocument<Date> {
       description: ProductDescription;
     },
     firestoreInstance: Firestore
-  ): Promise<DocumentReference | void> {
+  ): Promise<ProductDocRef | void> {
     const { name, description } = params;
 
     const owner = firebase.auth().currentUser;
@@ -255,7 +256,9 @@ export class Product implements ProductDocument<Date> {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
 
-    return await Product.getColRef(firestoreInstance).add(newProductDoc);
+    return (await getColRef<FieldValue>(firestoreInstance).add(
+      newProductDoc
+    )) as ProductDocRef;
   }
 
   public static async getCount(

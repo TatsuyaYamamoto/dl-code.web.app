@@ -84,6 +84,29 @@ export const getProductsByDownloadCode = async (
   return result;
 };
 
+export const sendImpression = (params: {
+  uid: string;
+  productId: string;
+  text: string;
+  idToken?: string;
+}): Promise<any> => {
+  return fetch(`${configs.apiBaseUrl}/api/users/${params.uid}/impressions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(params.idToken
+        ? {
+            Authorization: `Bearer ${params.idToken}`,
+          }
+        : {}),
+    },
+    body: JSON.stringify({
+      productId: params.productId,
+      text: params.text,
+    }),
+  });
+};
+
 export const sendAuditLog = (
   params: Omit<AuditLogDocument, "createdAt">
 ): boolean => {
