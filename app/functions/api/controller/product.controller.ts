@@ -1,13 +1,12 @@
 import { Controller, Query, Get, BadRequestException } from "@nestjs/common";
+import { addHours } from "date-fns";
 
 import { ActivatedProductsDto } from "./dto/ActivatedProductsDto";
 import { DownloadCodeService } from "../services/download-code.service";
-
 import {
   getUnsignedDownloadUrl,
   getSignedDownloadUrl,
 } from "../../utils/firebase";
-import addHours from "date-fns/addHours";
 import { DownloadCodeSetDocument } from "../../../domains/DownloadCodeSet";
 import { ProductDocument } from "../../../domains/Product";
 

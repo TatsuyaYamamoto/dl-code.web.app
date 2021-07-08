@@ -44,7 +44,31 @@ export const getProductsByDownloadCode = async (
         name: product.name,
         iconDownloadUrl: product.iconDownloadUrl,
         description: product.description,
-        productFiles: product.productFiles,
+        productFiles: Object.fromEntries(
+          Object.entries(product.productFiles).map(([id, productFile]) => {
+            const expiresParams = new URL(
+              productFile.signedDownloadUrl
+            ).searchParams.get("Expires");
+            const expireDate = expiresParams
+              ? new Date(parseInt(expiresParams) * 1000)
+              : new Date();
+
+            return [
+              id,
+              {
+                displayName: productFile.displayName,
+                signedDownloadUrl: {
+                  value: productFile.signedDownloadUrl,
+                  expireDate,
+                },
+                size: productFile.size,
+                contentType: productFile.contentType,
+                originalName: productFile.originalName,
+                index: productFile.index,
+              },
+            ] as const;
+          })
+        ),
         ownerUid: product.ownerUid,
         createdAt: new Date(product.createdAt),
       },

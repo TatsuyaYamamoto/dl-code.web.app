@@ -12,6 +12,7 @@ import {
 } from "@material-ui/core";
 import DownloadIcon from "@material-ui/icons/ArrowDownward";
 import PlayIcon from "@material-ui/icons/PlayArrow";
+import Button from "@material-ui/core/Button";
 
 import { useSnackbar } from "notistack";
 
@@ -21,6 +22,7 @@ import { IProductFile } from "../../domains/Product";
 
 import { formatFileSize } from "../../utils/format";
 import { downloadByUrl } from "../../utils/network";
+import { isPast } from "../../utils/date";
 
 import AudioWaveIcon from "../atoms/AudioWaveIcon";
 import LoadingIcon from "../atoms/LoadingIcon";
@@ -121,6 +123,21 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
   const onDownloadClicked = (fileId: string) => async () => {
     const { signedDownloadUrl, originalName } = files[fileId];
 
+    if (isPast(signedDownloadUrl.expireDate)) {
+      enqueueSnackbar(
+        `ダウンロード用URLの有効期限が切れているため、リロードしてください。`,
+        {
+          variant: "warning",
+          action: () => (
+            <Button variant="outlined" onClick={() => window.location.reload()}>
+              リロード
+            </Button>
+          ),
+        }
+      );
+      return;
+    }
+
     // TODO: show progress status
     const snackBarKey = enqueueSnackbar(`${originalName}をダウンロード中...`, {
       persist: true,
@@ -130,7 +147,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
     const downloadCode = product?.downloadCode || "__fail_load_download_code";
 
     try {
-      await downloadByUrl(signedDownloadUrl, originalName);
+      await downloadByUrl(signedDownloadUrl.value, originalName);
     } catch (e) {
       console.error(e);
       enqueueSnackbar(`ファイルのダウンロードに失敗しました。`, {
@@ -167,6 +184,22 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
 
   const onStartWithList = (fileId: string) => async () => {
     const { signedDownloadUrl } = files[fileId];
+    console.log(signedDownloadUrl);
+
+    if (isPast(signedDownloadUrl.expireDate)) {
+      enqueueSnackbar(
+        `再生用ファイルのURLの有効期限が切れているため、リロードしてください。`,
+        {
+          variant: "warning",
+          action: () => (
+            <Button variant="outlined" onClick={() => window.location.reload()}>
+              リロード
+            </Button>
+          ),
+        }
+      );
+      return;
+    }
 
     getByProductId(productId).then((product) => {
       const downloadCode = product?.downloadCode || "__fail_load_download_code";
@@ -177,7 +210,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
     });
 
     setSelectedId(fileId);
-    setAudioUrl(signedDownloadUrl);
+    setAudioUrl(signedDownloadUrl.value);
   };
 
   const onPlayWithPlayer = () => {
