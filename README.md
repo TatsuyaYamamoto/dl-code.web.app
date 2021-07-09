@@ -138,8 +138,9 @@ Error: The caller does not have permission
 name: 'SigningError'
 ```
 
-=> Cloud Console > [IAM & admin](https://console.cloud.google.com/iam-admin/iam) > IAM, Find the App Engine default service account and add the Service Account Token Creator role
+=> Cloud Console > [IAM & admin](https://console.cloud.google.com/iam-admin/iam) > IAM, Find the App Engine default service account and add the Service Account Token Creator role (`サービス アカウント トークン作成者`)
 
 - ref
-  - [https://firebase.google.com/support/guides/service-accounts?hl=ja](https://firebase.google.com/support/guides/service-accounts?hl=ja)
-  - [https://github.com/firebase/functions-samples/issues/782](https://github.com/firebase/functions-samples/issues/782)
+  - [Firebase サービス アカウントの概要](https://firebase.google.com/support/guides/service-accounts?hl=ja)
+    - functions の実行に関連するサービスアカウントは `project-id@appspot.gserviceaccount.com`
+  - [Update generate-thumbnail example because file.getSignedURL() does not work in the Cloud Functions environment #782](https://github.com/firebase/functions-samples/issues/782)
