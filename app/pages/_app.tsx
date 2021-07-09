@@ -1,4 +1,4 @@
-import { default as React, useEffect, useCallback } from "react";
+import { default as React, useEffect } from "react";
 
 import { AppProps } from "next/app";
 import Head from "next/head";
@@ -22,6 +22,8 @@ import { Auth0Provider } from "../components/hooks/useAuth0";
 
 import theme from "../theme";
 import configs from "../configs";
+import useAuditLogger from "../components/hooks/useAuditLogger";
+import { LogType } from "../domains/AuditLog";
 
 NProgress.configure({ showSpinner: true });
 
@@ -37,45 +39,49 @@ body {
 
 const MyApp: React.FC<AppProps> = (props) => {
   const { Component, pageProps, router } = props;
-  const { init: initGa, logPageView, logError } = useGa();
+  const ga = useGa();
+  const auditLogger = useAuditLogger();
 
-  const requestErrorDetailContact = useCallback(
-    (errorDetail: any) => {
-      const { userAgent, language } = navigator;
-      const { location } = window;
+  const requestErrorDetailContact = (errorDetail: any) => {
+    const { userAgent, language } = navigator;
+    const { location } = window;
 
-      const info = {
-        error: errorDetail,
-        userAgent,
-        language,
-        location,
-      };
+    const info = {
+      error: errorDetail,
+      userAgent,
+      language,
+      location,
+    };
 
-      logError(JSON.stringify(info), true);
+    ga.logError(JSON.stringify(info), true);
+    auditLogger.errorAudit({
+      type: LogType.EXCEPTION,
+      params: info,
+      error: new Error(),
+      fatal: true,
+    });
 
-      if (
-        window.confirm(
-          "予期せぬエラーが発生してしまいました。\n\n恐れ入りますが、問い合わせフォームを起動してエラーの詳細を送信して頂けませんでしょうか？(エラーの情報は自動で入力されます。)"
-        )
-      ) {
-        const detail = `${btoa(
-          unescape(encodeURIComponent(JSON.stringify(info)))
-        )}`;
-        const contactFormUrl = `https://docs.google.com/forms/d/e/1FAIpQLSe5bSPvJ5XQM0IACqZ9NKoHuRUAcC_V1an16JGwHh6HeGd-oQ/viewform?usp=pp_url&entry.1991364045=%E4%B8%8D%E5%85%B7%E5%90%88%E5%A0%B1%E5%91%8A...+/+Bug+Report&entry.326070868=DLCode&entry.1884055698=${detail}`;
-        window.location.href = contactFormUrl;
-      } else {
-        // tslint:disable-next-line:no-console
-        console.error(info);
-      }
-    },
-    [logError]
-  );
+    if (
+      window.confirm(
+        "予期せぬエラーが発生してしまいました。\n\n恐れ入りますが、問い合わせフォームを起動してエラーの詳細を送信して頂けませんでしょうか？(エラーの情報は自動で入力されます。)"
+      )
+    ) {
+      const detail = `${btoa(
+        unescape(encodeURIComponent(JSON.stringify(info)))
+      )}`;
+      const contactFormUrl = `https://docs.google.com/forms/d/e/1FAIpQLSe5bSPvJ5XQM0IACqZ9NKoHuRUAcC_V1an16JGwHh6HeGd-oQ/viewform?usp=pp_url&entry.1991364045=%E4%B8%8D%E5%85%B7%E5%90%88%E5%A0%B1%E5%91%8A...+/+Bug+Report&entry.326070868=DLCode&entry.1884055698=${detail}`;
+      window.location.href = contactFormUrl;
+    } else {
+      // tslint:disable-next-line:no-console
+      console.error(info);
+    }
+  };
 
   useEffect(() => {
     // GA
-    initGa();
-    logPageView();
-    router.events.on("routeChangeComplete", logPageView);
+    ga.init();
+    ga.logPageView();
+    router.events.on("routeChangeComplete", ga.logPageView);
 
     // Fatal error handling
     window.onerror = (message, file, lineNo, colNo, error) => {

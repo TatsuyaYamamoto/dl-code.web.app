@@ -1,28 +1,27 @@
 import firebase from "firebase/app";
-type DocumentReference = firebase.firestore.DocumentReference;
-type FieldValue = firebase.firestore.FieldValue;
+import { ProductDocRef } from "./Product";
+import { firestore as adminFirestoreType } from "firebase-admin";
 
-export interface ImpressionDocument {
-  productRef: DocumentReference;
+export type ImpressionDocRef<DateType = Timestamp> =
+  firebase.firestore.DocumentReference<ImpressionDocument<DateType>>;
+export type ImpressionColRef<DateType> = firebase.firestore.CollectionReference<
+  ImpressionDocument<DateType>
+>;
+type Timestamp = firebase.firestore.Timestamp;
+
+export interface ImpressionDocument<DateType = Timestamp> {
+  uid: string | "anonymous";
+  productRef: ProductDocRef<DateType>;
   text: string;
-  createdAt: Date | FieldValue;
+  createdAt: DateType;
 }
 
-export class Impression {
-  public static getColRef() {
-    return firebase.firestore().collection(`impressions`);
-  }
-
-  public static async post(
-    productRef: DocumentReference,
-    text: string
-  ): Promise<void> {
-    const newImpression: ImpressionDocument = {
-      productRef,
-      text,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    };
-
-    await Impression.getColRef().add(newImpression);
-  }
-}
+export const getColRef = <DateType = Timestamp>(
+  firestoreInstance:
+    | firebase.firestore.Firestore
+    | adminFirestoreType.Firestore = firebase.firestore()
+) => {
+  return firestoreInstance.collection(
+    `impressions`
+  ) as ImpressionColRef<DateType>;
+};

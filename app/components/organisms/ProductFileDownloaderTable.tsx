@@ -8,22 +8,21 @@ import {
   ListItemSecondaryAction,
   ListItemText,
   Paper,
-  Typography
+  Typography,
 } from "@material-ui/core";
 import DownloadIcon from "@material-ui/icons/ArrowDownward";
 import PlayIcon from "@material-ui/icons/PlayArrow";
+import Button from "@material-ui/core/Button";
 
 import { useSnackbar } from "notistack";
 
 import { LogType } from "../../domains/AuditLog";
 
-import { ProductFile } from "../../domains/Product";
+import { IProductFile } from "../../domains/Product";
 
 import { formatFileSize } from "../../utils/format";
-import {
-  downloadFromFirebaseStorage,
-  getStorageObjectDownloadUrl
-} from "../../utils/network";
+import { downloadByUrl } from "../../utils/network";
+import { isPast } from "../../utils/date";
 
 import AudioWaveIcon from "../atoms/AudioWaveIcon";
 import LoadingIcon from "../atoms/LoadingIcon";
@@ -53,7 +52,7 @@ const ProductFileListItem: React.FC<ProductFileListItemProps> = ({
   canPlay,
   state,
   onStart,
-  onDownload
+  onDownload,
 }) => {
   const onPlayIconClicked = (_: React.MouseEvent<HTMLButtonElement>) => {
     onStart();
@@ -107,83 +106,111 @@ type PlayerState =
 
 interface ProductFileDownloaderTableProps {
   productId: string;
-  files: { [id: string]: ProductFile };
+  files: { [id: string]: IProductFile };
 }
 const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
   productId,
-  files
+  files,
 }) => {
   const { getByProductId } = useDownloadCodeVerifier();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { okAudit } = useAuditLogger();
+  const { okAudit, errorAudit } = useAuditLogger();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [playerState, setPlayerState] = useState<PlayerState>("none");
 
   const onDownloadClicked = (fileId: string) => async () => {
-    const { storageUrl, originalName } = files[fileId];
+    const { signedDownloadUrl, originalName } = files[fileId];
 
-    // TODO: show progress status
-    const snackBarKey = enqueueSnackbar(`${originalName}をダウンロード中...`, {
-      persist: true
-    });
-
-    if (snackBarKey === null) {
-      // TODO: fail show snackbar. handling error.
+    if (isPast(signedDownloadUrl.expireDate)) {
+      enqueueSnackbar(
+        `ダウンロード用URLの有効期限が切れているため、リロードしてください。`,
+        {
+          variant: "warning",
+          action: () => (
+            <Button variant="outlined" onClick={() => window.location.reload()}>
+              リロード
+            </Button>
+          ),
+        }
+      );
       return;
     }
 
-    downloadFromFirebaseStorage(storageUrl, originalName).then(() => {
+    // TODO: show progress status
+    const snackBarKey = enqueueSnackbar(`${originalName}をダウンロード中...`, {
+      persist: true,
+    });
+
+    const product = await getByProductId(productId);
+    const downloadCode = product?.downloadCode || "__fail_load_download_code";
+
+    try {
+      await downloadByUrl(signedDownloadUrl.value, originalName);
+    } catch (e) {
+      console.error(e);
+      enqueueSnackbar(`ファイルのダウンロードに失敗しました。`, {
+        variant: "error",
+      });
+      errorAudit({
+        type: LogType.EXCEPTION_FAIL_DOWNLOAD_FILE,
+        fatal: true,
+        error: e,
+        params: {
+          productId,
+          downloadCode,
+          fileId,
+          signedDownloadUrl,
+          originalName,
+        },
+      });
+      return;
+    } finally {
       closeSnackbar(snackBarKey);
+    }
 
-      getByProductId(productId)
-        .then(product => {
-          if (!product) {
-            throw new Error(
-              "unexpected error. start product file was not found."
-            );
-          }
-
-          return product;
-        })
-        .then(({ downloadCode }) => {
-          okAudit({
-            type: LogType.DOWNLOAD_PRODUCT_FILE,
-            params: {
-              storageUrl,
-              originalName,
-              downloadCode
-            }
-          });
-        });
+    okAudit({
+      type: LogType.DOWNLOAD_PRODUCT_FILE,
+      params: {
+        signedDownloadUrl,
+        fileId,
+        originalName,
+        productId,
+        downloadCode,
+      },
     });
   };
 
   const onStartWithList = (fileId: string) => async () => {
-    const { storageUrl } = files[fileId];
+    const { signedDownloadUrl } = files[fileId];
+    console.log(signedDownloadUrl);
 
-    const url = await getStorageObjectDownloadUrl(storageUrl);
-
-    getByProductId(productId)
-      .then(product => {
-        if (!product) {
-          throw new Error(
-            "unexpected error. start product file was not found."
-          );
+    if (isPast(signedDownloadUrl.expireDate)) {
+      enqueueSnackbar(
+        `再生用ファイルのURLの有効期限が切れているため、リロードしてください。`,
+        {
+          variant: "warning",
+          action: () => (
+            <Button variant="outlined" onClick={() => window.location.reload()}>
+              リロード
+            </Button>
+          ),
         }
+      );
+      return;
+    }
 
-        return product;
-      })
-      .then(({ downloadCode }) => {
-        okAudit({
-          type: LogType.PLAY_PRODUCT_FILE,
-          params: { productFileId: fileId, downloadCode, url }
-        });
+    getByProductId(productId).then((product) => {
+      const downloadCode = product?.downloadCode || "__fail_load_download_code";
+      okAudit({
+        type: LogType.PLAY_PRODUCT_FILE,
+        params: { productFileId: fileId, downloadCode, signedDownloadUrl },
       });
+    });
 
     setSelectedId(fileId);
-    setAudioUrl(url);
+    setAudioUrl(signedDownloadUrl.value);
   };
 
   const onPlayWithPlayer = () => {
@@ -199,13 +226,31 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
     setAudioUrl(null);
   };
 
+  const onPlayError = (e: Error) => {
+    enqueueSnackbar(`再生に失敗しました。`, {
+      variant: "error",
+    });
+    errorAudit({
+      type: LogType.EXCEPTION_FILE_TO_PLAY_AUDIO,
+      fatal: true,
+      error: e,
+      params: {
+        productId,
+        fileId: selectedId,
+        audioUrl,
+      },
+    });
+    setSelectedId(null);
+    setAudioUrl(null);
+  };
+
   const data = useMemo(
     () =>
       Object.keys(files)
-        .map(id => {
+        .map((id) => {
           return {
             id,
-            file: files[id]
+            file: files[id],
           };
         })
         .sort((a, b) => {
@@ -223,7 +268,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
             // TODO!
             canPlay: ["audio/mp3", "audio/x-m4a", "audio/mpeg"].includes(
               file.contentType
-            )
+            ),
           };
         }),
     [files]
@@ -259,6 +304,7 @@ const ProductFileDownloaderTable: React.FC<ProductFileDownloaderTableProps> = ({
         onPlay={onPlayWithPlayer}
         onPause={onPauseWithPlayer}
         onClose={onClosePlayer}
+        onError={onPlayError}
       />
     </>
   );

@@ -8,7 +8,8 @@ import Typography from "@material-ui/core/Typography";
 import TextField, { TextFieldProps } from "@material-ui/core/TextField";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import LocalOffer from "@material-ui/icons/LocalOffer";
-import Button from "@material-ui/core/Button";
+
+import ProgressButton from "../molecules/ProgressButton";
 
 const StyledPaper = styled(Paper)`
   padding: ${({ theme }: ThemeProps<MuiTheme>) => theme.spacing(2)}px;
@@ -22,6 +23,7 @@ const StyledTextField = styled(TextField)`
 
 interface DownloadCodeInputCardProps {
   value: string;
+  progressing: boolean;
   onChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
   >;
@@ -30,8 +32,9 @@ interface DownloadCodeInputCardProps {
 
 const DownloadCodeInputCard: React.FC<DownloadCodeInputCardProps> = ({
   value,
+  progressing,
   onChange,
-  onSubmit
+  onSubmit,
 }) => {
   const disableSubmit = value.length === 0;
 
@@ -48,18 +51,19 @@ const DownloadCodeInputCard: React.FC<DownloadCodeInputCardProps> = ({
             <InputAdornment position="start">
               <LocalOffer />
             </InputAdornment>
-          )
+          ),
         }}
       />
-      <Button
+      <ProgressButton
         variant="contained"
         color="primary"
         disabled={disableSubmit}
+        progressing={progressing}
         onClick={onSubmit}
         fullWidth={true}
       >
         実行
-      </Button>
+      </ProgressButton>
     </StyledPaper>
   );
 };

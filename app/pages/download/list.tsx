@@ -1,4 +1,4 @@
-import { default as React, useState, useMemo, FC } from "react";
+import { default as React, useState, useMemo, FC, useEffect } from "react";
 
 import { NextPage } from "next";
 
@@ -18,7 +18,8 @@ const ProgressContent: FC = () => (
 );
 
 const DownloadProductListPage: NextPage = () => {
-  const { actives } = useDownloadCodeVerifier();
+  const { actives, loadFromDb } = useDownloadCodeVerifier();
+  const [processing, setProcessing] = useState(true);
   const [showingProductId, setShowingProductId] = useState<string | null>(null);
 
   const onBack = useMemo(() => {
@@ -36,7 +37,7 @@ const DownloadProductListPage: NextPage = () => {
   };
 
   const main = useMemo(() => {
-    if (actives === "processing") {
+    if (processing) {
       return <ProgressContent />;
     }
 
@@ -61,7 +62,12 @@ const DownloadProductListPage: NextPage = () => {
         downloadCodeExpiredAt={expiredAt}
       />
     );
-  }, [actives, showingProductId]);
+  }, [actives, processing, showingProductId]);
+
+  useEffect(() => {
+    loadFromDb();
+    setProcessing(false);
+  }, [loadFromDb]);
 
   return (
     <>

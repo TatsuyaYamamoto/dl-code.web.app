@@ -1,14 +1,14 @@
 require("ts-node").register({
   project: __dirname + "/tsconfig.json",
   // ファイルスコープに定義した import moduleや変数がトランスパイル時に "redeclare" でerrorが発生する
-  transpileOnly: true
+  transpileOnly: true,
 });
 const { setHeadlessWhen } = require("@codeceptjs/configure");
 
 const {
   HEADLESS,
   BROWSER_TARGET = "chromium",
-  TEST_BASE_URL = "https://dl-code-dev.web.app"
+  TEST_BASE_URL = "https://dl-code-dev.web.app",
 } = process.env;
 
 const browserHelpers = {
@@ -17,8 +17,8 @@ const browserHelpers = {
       url: TEST_BASE_URL,
       show: true,
       browser: "chromium",
-      restart: false
-    }
+      restart: false,
+    },
   },
   ios_13_5: {
     Appium: {
@@ -27,10 +27,10 @@ const browserHelpers = {
       desiredCapabilities: {
         deviceName: "iPhone Simulator",
         platformVersion: "13.5",
-        browserName: "safari"
-      }
-    }
-  }
+        browserName: "safari",
+      },
+    },
+  },
 };
 
 // turn on headless mode when running with HEADLESS=true environment variable
@@ -42,13 +42,13 @@ exports.config = {
   output: "./output",
   helpers: {
     ...browserHelpers[BROWSER_TARGET],
-    FileSystem: {}
+    FileSystem: {},
   },
   include: {
     I: "./steps_file.ts",
     topPage: "./pages/topPage.ts",
     verifyPage: "./pages/verifyPage.ts",
-    downloadProductListPage: "./pages/downloadProductListPage.ts"
+    downloadProductListPage: "./pages/downloadProductListPage.ts",
   },
   bootstrap: null,
   mocha: {},
@@ -56,13 +56,13 @@ exports.config = {
   plugins: {
     pauseOnFail: {},
     retryFailedStep: {
-      enabled: true
+      enabled: true,
     },
     tryTo: {
-      enabled: true
+      enabled: true,
     },
     screenshotOnFail: {
-      enabled: true
-    }
-  }
+      enabled: true,
+    },
+  },
 };

@@ -24,6 +24,9 @@ const configs = {
         messagingSenderId: "170382784624",
         appId: "1:170382784624:web:42b794526ad81a74",
       },
+  apiBaseUrl: isProduction
+    ? "https://asia-northeast1-dl-code.cloudfunctions.net"
+    : "https://asia-northeast1-dl-code-dev.cloudfunctions.net",
   apiServerOrigin: isProduction
     ? "https://api.sokontokoro-factory.net"
     : "https://api-dev.sokontokoro-factory.net",

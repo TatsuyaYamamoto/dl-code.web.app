@@ -1,4 +1,4 @@
-import { default as React, useState, useEffect, FC } from "react";
+import React, { FC } from "react";
 
 import { Grid } from "@material-ui/core";
 
@@ -6,10 +6,10 @@ import ImpressionForm from "../../components/organisms/ImpressionForm";
 import ProductDetail from "../../components/organisms/ProductDetail";
 import ProductFileDownloaderTable from "../../components/organisms/ProductFileDownloaderTable";
 
-import { Product } from "../../domains/Product";
+import { IProduct } from "../../domains/Product";
 
 interface DetailPageProps {
-  product: Product;
+  product: IProduct;
   downloadCodeExpiredAt: Date;
 }
 
@@ -17,15 +17,7 @@ const ProductDetailContent: FC<DetailPageProps> = ({
   product,
   downloadCodeExpiredAt,
 }) => {
-  const [iconUrl, setIconUrl] = useState("");
-
-  useEffect(() => {
-    product.getIconUrl().then((url) => {
-      setIconUrl(url || "");
-    });
-    // TODO
-    // eslint-disable-next-line
-  }, []);
+  const iconUrl = product.iconDownloadUrl;
 
   return (
     <Grid container={true} direction={"column"} spacing={5}>

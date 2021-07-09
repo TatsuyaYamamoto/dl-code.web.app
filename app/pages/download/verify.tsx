@@ -26,6 +26,7 @@ const VerifyPage: NextPage = () => {
   const router = useRouter();
   const [downloadCode, setDownloadCode] = useState<string>("");
   const [openNotFoundDialog, setOpenNotFoundDialog] = useState(false);
+  const [progressing, setProgressing] = useState(false);
   const { verifyDownloadCode } = useDownloadCodeVerifier();
 
   useEffect(() => {
@@ -44,12 +45,16 @@ const VerifyPage: NextPage = () => {
     setDownloadCode(e.target.value);
   };
 
-  const submit = () => {
+  const submit = async () => {
+    setProgressing(true);
+
     verifyDownloadCode(downloadCode)
       .then(() => {
+        setProgressing(false);
         return router.push(`/download/list`);
       })
-      .catch(_ => {
+      .catch((_) => {
+        setProgressing(false);
         handleNotFoundDialog();
       });
   };
@@ -74,6 +79,7 @@ const VerifyPage: NextPage = () => {
               <DownloadCodeInputCard
                 value={downloadCode}
                 onChange={onChangeDownloadCodeValue}
+                progressing={progressing}
                 onSubmit={submit}
               />
             </Grid>

@@ -1,8 +1,13 @@
 import firebase from "firebase/app";
 import { v4 as uuid } from "uuid";
+import { firestore as adminFirestoreType } from "firebase-admin";
 
 type Firestore = firebase.firestore.Firestore;
-type DocumentReference = firebase.firestore.DocumentReference;
+export type ProductDocRef<DateType = Timestamp> =
+  firebase.firestore.DocumentReference<ProductDocument<DateType>>;
+export type ProductColRef<DateType> = firebase.firestore.CollectionReference<
+  ProductDocument<DateType>
+>;
 type Timestamp = firebase.firestore.Timestamp;
 type UpdateData = firebase.firestore.UpdateData;
 type FieldValue = firebase.firestore.FieldValue;
@@ -61,7 +66,7 @@ export interface ProductFileMap {
   [id: string]: ProductFile;
 }
 
-export interface ProductDocument {
+export interface ProductDocument<DateType = Timestamp> {
   name: ProductName;
   /**
    * @see storage#Reference#toString()
@@ -70,10 +75,43 @@ export interface ProductDocument {
   description: ProductDescription;
   productFiles: ProductFileMap;
   ownerUid: string;
-  createdAt: Date | FieldValue;
+  createdAt: DateType;
 }
 
-export class Product implements ProductDocument {
+export const getColRef = <DateType = Timestamp>(
+  firestoreInstance:
+    | firebase.firestore.Firestore
+    | adminFirestoreType.Firestore = firebase.firestore()
+) => {
+  return firestoreInstance.collection(`products`) as ProductColRef<DateType>;
+};
+
+export interface IProductFile {
+  displayName: string;
+  signedDownloadUrl: {
+    value: string;
+    expireDate: Date;
+  };
+  size: number;
+  contentType: string;
+  originalName: string;
+  index: number;
+}
+
+export interface IProduct {
+  readonly id: string;
+  readonly name: string;
+  readonly iconDownloadUrl: string | null;
+  readonly description: string;
+  readonly ownerUid: string;
+  readonly productFiles: { [id: string]: IProductFile };
+  readonly createdAt: Date;
+}
+
+/**
+ * @deprecated
+ */
+export class Product implements ProductDocument<Date> {
   public static getColRef(firestoreInstance: Firestore) {
     return firestoreInstance.collection(`products`);
   }
@@ -201,7 +239,7 @@ export class Product implements ProductDocument {
       description: ProductDescription;
     },
     firestoreInstance: Firestore
-  ): Promise<DocumentReference | void> {
+  ): Promise<ProductDocRef | void> {
     const { name, description } = params;
 
     const owner = firebase.auth().currentUser;
@@ -209,7 +247,7 @@ export class Product implements ProductDocument {
       return;
     }
 
-    const newProductDoc: ProductDocument = {
+    const newProductDoc: ProductDocument<FieldValue> = {
       name,
       iconStorageUrl: null,
       description,
@@ -218,7 +256,9 @@ export class Product implements ProductDocument {
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
     };
 
-    return await Product.getColRef(firestoreInstance).add(newProductDoc);
+    return (await getColRef<FieldValue>(firestoreInstance).add(
+      newProductDoc
+    )) as ProductDocRef;
   }
 
   public static async getCount(
