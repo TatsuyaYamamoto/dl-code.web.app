@@ -27,9 +27,6 @@ const configs = {
   apiBaseUrl: isProduction
     ? "https://asia-northeast1-dl-code.cloudfunctions.net"
     : "https://asia-northeast1-dl-code-dev.cloudfunctions.net",
-  apiServerOrigin: isProduction
-    ? "https://api.sokontokoro-factory.net"
-    : "https://api-dev.sokontokoro-factory.net",
 };
 
 export default configs;
