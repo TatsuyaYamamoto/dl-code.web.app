@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import {
   default as MuiAppBar,
-  AppBarProps as MuiAppBarProps
+  AppBarProps as MuiAppBarProps,
 } from "@material-ui/core/AppBar";
 import {
   Toolbar,
@@ -12,7 +12,7 @@ import {
   Icon,
   IconButton,
   Tabs,
-  Tab
+  Tab,
 } from "@material-ui/core";
 
 import styled from "styled-components";
@@ -21,8 +21,7 @@ import UserIconMenu from "./UserIconMenu";
 
 import FlexSpace from "../../atoms/FlexSpace";
 import Logo from "../../atoms/Logo";
-import useDlCodeUser from "../../hooks/useDlCodeUser";
-import useAuth0 from "../../hooks/useAuth0";
+import useAuth from "../../hooks/useAuth";
 
 const StyledMuiAppBar = styled(MuiAppBar as FC<MuiAppBarProps>)`
   && {
@@ -48,10 +47,9 @@ interface AppBarProps {
   onBack?: () => void;
 }
 
-const AppBar: FC<AppBarProps> = props => {
+const AppBar: FC<AppBarProps> = (props) => {
   const { onBack } = props;
-  const { logout } = useAuth0();
-  const { user } = useDlCodeUser();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
   const [tabValue, setTabValue] = useState<TabValue>(() => {
@@ -68,6 +66,7 @@ const AppBar: FC<AppBarProps> = props => {
   );
 
   const onClickLogout = () => {
+    router.push(`/`);
     logout();
   };
 

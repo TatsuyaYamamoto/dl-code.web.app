@@ -5,10 +5,10 @@ import {
   List,
   ListItem,
   ListItemText,
-  ListSubheader
+  ListSubheader,
 } from "@material-ui/core";
 
-import useDlCodeUser from "../../components/hooks/useDlCodeUser";
+import useAuth from "../../components/hooks/useAuth";
 import { formatFileSize } from "../../utils/format";
 
 interface ResourceCounter {
@@ -25,7 +25,7 @@ interface AccountData {
 }
 
 const PublishUserProfile: React.FC = () => {
-  const { user } = useDlCodeUser();
+  const { user } = useAuth();
 
   const resourceCounters = useMemo<ResourceCounter[]>(() => {
     const counters: ResourceCounter[] = [];
@@ -34,22 +34,22 @@ const PublishUserProfile: React.FC = () => {
       counters.push({
         key: "counters.product",
         displayLabel: "プロダクト数",
-        limit: user.user.counters.product.limit,
-        current: user.user.counters.product.current
+        limit: user.counters.product.limit,
+        current: user.counters.product.current,
       });
 
       counters.push({
         key: "counters.downloadCode",
         displayLabel: "ダウンロードコード数",
-        limit: user.user.counters.downloadCode.limit,
-        current: user.user.counters.downloadCode.current
+        limit: user.counters.downloadCode.limit,
+        current: user.counters.downloadCode.current,
       });
 
       counters.push({
         key: "counters.totalFileSizeByte",
         displayLabel: "アップロード済みファイルサイズ",
-        limit: formatFileSize(user.user.counters.totalFileSizeByte.limit),
-        current: formatFileSize(user.user.counters.totalFileSizeByte.current)
+        limit: formatFileSize(user.counters.totalFileSizeByte.limit),
+        current: formatFileSize(user.counters.totalFileSizeByte.current),
       });
     }
 
@@ -63,13 +63,13 @@ const PublishUserProfile: React.FC = () => {
       data.push({
         key: "user.uid",
         displayLabel: "ユーザーID",
-        value: user.uid
+        value: user.uid,
       });
 
       data.push({
         key: "user.twitterUserName",
         displayLabel: "Twitterユーザー名",
-        value: user.displayName
+        value: user.displayName,
       });
     }
 

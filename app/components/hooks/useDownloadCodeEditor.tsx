@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 
 import {
   DownloadCodeSet,
-  DownloadCodeSetDocument
+  DownloadCodeSetDocument,
 } from "../../domains/DownloadCodeSet";
 import { Product } from "../../domains/Product";
-import useDlCodeUser from "./useDlCodeUser";
+import { editCounter as editDlCodeUserCounter } from "../../domains/DlCodeUser";
+
+import useAuth from "./useAuth";
 import useFirebase from "./useFirebase";
 
 const useDownloadCodeEditor = (product: Product | null) => {
-  const { user } = useDlCodeUser();
+  const { user } = useAuth();
   const { app: firebaseApp } = useFirebase();
   const [codeSets, setCodeSets] = useState<DownloadCodeSet[]>([]);
 
@@ -21,7 +23,7 @@ const useDownloadCodeEditor = (product: Product | null) => {
 
     const unsubscribe = DownloadCodeSet.watchListByProductRef(
       product.ref,
-      sets => {
+      (sets) => {
         setCodeSets(sets);
       }
     );
@@ -39,10 +41,8 @@ const useDownloadCodeEditor = (product: Product | null) => {
       throw new Error("unexpected.");
     }
 
-    const {
-      current: currentRegisteredCount,
-      limit: maxRegisteredCount
-    } = user.user.counters.downloadCode;
+    const { current: currentRegisteredCount, limit: maxRegisteredCount } =
+      user.counters.downloadCode;
 
     if (maxRegisteredCount < currentRegisteredCount + numberOfCodes) {
       throw new Error(
@@ -51,12 +51,13 @@ const useDownloadCodeEditor = (product: Product | null) => {
     }
 
     await Promise.all([
-      user.editCounter(
+      editDlCodeUserCounter(
+        user,
         "downloadCode",
         currentRegisteredCount + numberOfCodes,
         firebaseApp.firestore()
       ),
-      await DownloadCodeSet.create(product.ref, numberOfCodes, expiredAt)
+      await DownloadCodeSet.create(product.ref, numberOfCodes, expiredAt),
     ]);
   };
 
@@ -84,7 +85,7 @@ const useDownloadCodeEditor = (product: Product | null) => {
   return {
     downloadCodeSets: codeSets,
     addDownloadCodeSet,
-    updateDownloadCodeSet
+    updateDownloadCodeSet,
   };
 };
 

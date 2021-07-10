@@ -15,7 +15,7 @@ type FieldValue = firebaseAdmin.firestore.FieldValue;
 @Injectable()
 export class UserService {
   async init(uid: string): Promise<DlCodeUserDocument | null> {
-    const newUserDoc: DlCodeUserDocument = {
+    const newUserDoc: DlCodeUserDocument<FieldValue> = {
       counters: {
         product: {
           limit: 1,
@@ -30,6 +30,8 @@ export class UserService {
           current: 0,
         },
       },
+      createdAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
     };
     const newUserDocRef = firebaseAdmin
       .firestore()
@@ -44,7 +46,7 @@ export class UserService {
 
     await newUserDocRef.set(newUserDoc);
     logger.error(`new user is inited.`, newUserDoc);
-    return newUserDoc;
+    return newUserDoc as DlCodeUserDocument;
   }
 
   public async saveImpression(

@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import styled from "styled-components";
 
 import useFirebase from "../hooks/useFirebase";
-import useDlCodeUser from "../hooks/useDlCodeUser";
+import useAuth from "../hooks/useAuth";
 import ProductListItem, {
   ProductListAddItem,
 } from "../organisms/ProductListItem";
@@ -31,15 +31,15 @@ const ProductList: FC<ProductListProps> = (props) => {
   const [products, setProducts] = React.useState<Product[]>([]);
   const router = useRouter();
   const { app: firebaseApp } = useFirebase();
-  const { user: dlCodeUser } = useDlCodeUser();
+  const { user } = useAuth();
 
   useEffect(() => {
-    if (!dlCodeUser) {
+    if (!user) {
       return;
     }
 
     const unsubscribe = Product.watchList(
-      dlCodeUser.uid,
+      user.uid,
       firebaseApp.firestore(),
       (owns) => {
         setProducts(owns);
@@ -49,7 +49,7 @@ const ProductList: FC<ProductListProps> = (props) => {
     return () => {
       unsubscribe();
     };
-  }, [firebaseApp, dlCodeUser]);
+  }, [firebaseApp, user]);
 
   const onSelected = (id: string) => () => {
     router.push({

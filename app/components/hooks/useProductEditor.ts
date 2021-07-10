@@ -6,18 +6,19 @@ import {
   Product,
   ProductDescription,
   ProductDocument,
+  ProductDocRef,
   ProductFile,
   ProductFileDisplayName,
   ProductName,
 } from "../../domains/Product";
-import useDlCodeUser from "./useDlCodeUser";
+import { editCounter as editDlCodeUserCounter } from "../../domains/DlCodeUser";
+import useAuth from "./useAuth";
 
-type DocumentReference = firebase.firestore.DocumentReference;
 type UploadTask = firebase.storage.UploadTask;
 
 const useProductEditor = (productId?: string) => {
   const { app: firebaseApp } = useFirebase();
-  const { user: dlCodeUser } = useDlCodeUser();
+  const { user } = useAuth();
   const [product, setProduct] = useState<Product | null>(null);
 
   /**
@@ -33,7 +34,7 @@ const useProductEditor = (productId?: string) => {
   };
 
   useEffect(() => {
-    if (!dlCodeUser) {
+    if (!user) {
       return;
     }
 
@@ -52,21 +53,21 @@ const useProductEditor = (productId?: string) => {
     return () => {
       unsubscribe();
     };
-  }, [firebaseApp, dlCodeUser, productId]);
+  }, [firebaseApp, user, productId]);
 
   const addProduct = useCallback(
     async (
       name: ProductName,
       description: ProductDescription
-    ): Promise<[DocumentReference | void, DocumentReference | void]> => {
-      if (!dlCodeUser) {
+    ): Promise<[ProductDocRef | void, ProductDocRef | void]> => {
+      if (!user) {
         throw new Error(
           "unexpected. firebase and user haven't benn initialized."
         );
       }
 
       const { current: currentRegisteredCount, limit: maxRegisteredCount } =
-        dlCodeUser.user.counters.product;
+        user.counters.product;
 
       if (maxRegisteredCount <= currentRegisteredCount) {
         throw new Error(
@@ -75,18 +76,20 @@ const useProductEditor = (productId?: string) => {
       }
 
       // current countを改めて計算する、冗長だけれど、、
-      const current = await Product.getCount(
-        dlCodeUser.uid,
-        firebaseApp.firestore()
-      );
+      const current = await Product.getCount(user.uid, firebaseApp.firestore());
 
       // TODO アトミックな処理に実装を変更する
       return Promise.all([
-        dlCodeUser.editCounter("product", current + 1, firebaseApp.firestore()),
+        editDlCodeUserCounter(
+          user,
+          "product",
+          current + 1,
+          firebaseApp.firestore()
+        ),
         Product.createNew({ name, description }, firebaseApp.firestore()),
       ]);
     },
-    [firebaseApp, dlCodeUser]
+    [firebaseApp, user]
   );
 
   const updateProduct = useCallback(
@@ -120,7 +123,7 @@ const useProductEditor = (productId?: string) => {
       promise: Promise<void>;
     } => {
       const loadedProduct = shouldProductRefLoaded(product);
-      if (!dlCodeUser) {
+      if (!user) {
         throw new Error("non auth user logged-in.");
       }
 
@@ -128,7 +131,7 @@ const useProductEditor = (productId?: string) => {
       const fileSizeByteTrying = file.size;
 
       const { current: currentFileSizeByte, limit: maxFileSizeByte } =
-        dlCodeUser.user.counters.totalFileSizeByte;
+        user.counters.totalFileSizeByte;
 
       if (maxFileSizeByte < currentFileSizeByte + fileSizeByteTrying) {
         throw new Error(
@@ -137,7 +140,7 @@ const useProductEditor = (productId?: string) => {
       }
 
       const { task, promise } = loadedProduct.addProductFile(
-        dlCodeUser.uid,
+        user.uid,
         displayName,
         file
       );
@@ -147,7 +150,8 @@ const useProductEditor = (productId?: string) => {
         // TODO アトミックな処理に実装を変更する
         promise: Promise.all([
           promise,
-          dlCodeUser.editCounter(
+          editDlCodeUserCounter(
+            user,
             "totalFileSizeByte",
             currentFileSizeByte + fileSizeByteTrying,
             firebaseApp.firestore()
@@ -155,7 +159,7 @@ const useProductEditor = (productId?: string) => {
         ]).then(),
       };
     },
-    [firebaseApp, product, dlCodeUser]
+    [firebaseApp, product, user]
   );
 
   const updateProductFile = useCallback(
@@ -168,7 +172,7 @@ const useProductEditor = (productId?: string) => {
 
   const deleteProductFile = useCallback(
     async (productFileId: string) => {
-      if (!dlCodeUser) {
+      if (!user) {
         throw new Error("non auth user logged-in.");
       }
 
@@ -176,20 +180,20 @@ const useProductEditor = (productId?: string) => {
       const deletingFileSizeByte =
         loadedProduct.productFiles[productFileId].size;
 
-      const { current: currentFileSizeByte } =
-        dlCodeUser.user.counters.totalFileSizeByte;
+      const { current: currentFileSizeByte } = user.counters.totalFileSizeByte;
 
       // TODO アトミックな処理に実装を変更する
       return Promise.all([
         loadedProduct.deleteProductFile(productFileId),
-        dlCodeUser.editCounter(
+        editDlCodeUserCounter(
+          user,
           "totalFileSizeByte",
           currentFileSizeByte - deletingFileSizeByte,
           firebaseApp.firestore()
         ),
       ]);
     },
-    [product, dlCodeUser, firebaseApp]
+    [product, user, firebaseApp]
   );
 
   return {

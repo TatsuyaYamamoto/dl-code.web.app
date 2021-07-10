@@ -1,4 +1,4 @@
-import { default as React, useEffect } from "react";
+import { default as React } from "react";
 
 import { NextPage } from "next";
 
@@ -8,24 +8,10 @@ import Grid from "@material-ui/core/Grid";
 import AppBar from "../../components/organisms/AppBar/PublishAppBar";
 import Footer from "../../components/organisms/Footer";
 import PublishUserProfile from "../../components/organisms/PublishUserProfile";
-import useAuth0 from "../../components/hooks/useAuth0";
+import useAuth from "../../components/hooks/useAuth";
 
 const PublishIndexPage: NextPage = () => {
-  const {
-    idToken,
-    initialized: isAuth0Initialized,
-    loginWithRedirect
-  } = useAuth0();
-
-  useEffect(() => {
-    if (!isAuth0Initialized) {
-      return;
-    }
-
-    if (!idToken) {
-      loginWithRedirect();
-    }
-  }, [idToken, isAuth0Initialized, loginWithRedirect]);
+  useAuth({ requiredAuth: true });
 
   return (
     <>

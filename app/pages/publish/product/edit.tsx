@@ -1,4 +1,4 @@
-import { default as React, useEffect } from "react";
+import { default as React } from "react";
 
 import { NextPage } from "next";
 import { useRouter } from "next/router";
@@ -9,30 +9,16 @@ import Grid from "@material-ui/core/Grid";
 import AppBar from "../../../components/organisms/AppBar/PublishAppBar";
 import Footer from "../../../components/organisms/Footer";
 import ProductEditForm from "../../../components/organisms/ProductEditForm";
-import useAuth0 from "../../../components/hooks/useAuth0";
+import useAuth from "../../../components/hooks/useAuth";
 
 const ProductEditPage: NextPage = () => {
-  const {
-    idToken,
-    initialized: isAuth0Initialized,
-    loginWithRedirect
-  } = useAuth0();
+  useAuth({ requiredAuth: true });
   const router = useRouter();
   const productId = router.query.id as string;
 
   const onBack = () => {
     router.back();
   };
-
-  useEffect(() => {
-    if (!isAuth0Initialized) {
-      return;
-    }
-
-    if (!idToken) {
-      loginWithRedirect();
-    }
-  }, [idToken, isAuth0Initialized, loginWithRedirect]);
 
   return (
     <>

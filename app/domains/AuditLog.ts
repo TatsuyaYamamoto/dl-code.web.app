@@ -1,5 +1,5 @@
 import firebase from "firebase/app";
-import { firestore as adminFirestoreType } from "firebase-admin";
+import type { firestore as adminFirestoreType } from "firebase-admin";
 
 type Timestamp = firebase.firestore.Timestamp;
 

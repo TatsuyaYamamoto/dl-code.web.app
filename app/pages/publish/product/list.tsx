@@ -1,11 +1,11 @@
-import { default as React, useState, useEffect, useCallback } from "react";
+import { default as React, useState, useCallback } from "react";
 
 import { NextPage } from "next";
 
 import Container from "@material-ui/core/Container";
 import Grid from "@material-ui/core/Grid";
 
-import useAuth0 from "../../../components/hooks/useAuth0";
+import useAuth from "../../../components/hooks/useAuth";
 
 import AppBar from "../../../components/organisms/AppBar/PublishAppBar";
 import Footer from "../../../components/organisms/Footer";
@@ -13,11 +13,7 @@ import ProductList from "../../../components/organisms/ProductList";
 import ProductAddDialog from "../../../components/organisms/ProductAddDialog";
 
 const ProductListPage: NextPage = () => {
-  const {
-    idToken,
-    initialized: isAuth0Initialized,
-    loginWithRedirect
-  } = useAuth0();
+  useAuth({ requiredAuth: true });
   const [isAddDialogOpened, setAddDialogOpened] = useState(false);
 
   const handleAddDialog = useCallback(() => {
@@ -29,16 +25,6 @@ const ProductListPage: NextPage = () => {
       handleAddDialog();
     });
   };
-
-  useEffect(() => {
-    if (!isAuth0Initialized) {
-      return;
-    }
-
-    if (!idToken) {
-      loginWithRedirect();
-    }
-  }, [idToken, isAuth0Initialized, loginWithRedirect]);
 
   return (
     <>
