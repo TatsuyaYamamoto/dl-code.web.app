@@ -10,26 +10,6 @@ import {
 } from "../../domains/DlCodeUser";
 import { initUser as initUserApi } from "../../utils/api";
 
-// export interface Auth0User extends _Auth0User {
-//   /**
-//    * twitterの表示名
-//    */
-//   nickname: string;
-//
-//   /**
-//    * こっちもtwitterの表示名。screen_nameじゃないので、注意
-//    * https://community.auth0.com/t/twitter-nickname-is-not-the-same-as-screen-name/17297/3
-//    */
-//   name: string;
-//
-//   /**
-//    * アイコン画像URL
-//    */
-//   picture: string;
-//   updated_at: string;
-//   sub: string;
-// }
-
 export type SessionState = "processing" | "loggedIn" | "loggedOut";
 
 export interface IAuthContext {
