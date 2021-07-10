@@ -67,28 +67,6 @@ $ KEY=slack            ; firebase functions:config:set $KEY="$(cat .runtimeconfi
 
 ```
 
-### Auth0
-
-- Allowed Callback URLs
-
-  ```text
-  http://localhost:3000,http://localhost:3000/callback
-  ```
-
-  - http://localhost:3000 => getTokenSilently 時の redirect_uri の default value
-  - http://localhost:3000/callback => app 側が auth0 に渡す redirect_uri
-
-- Allowed Web Origins
-
-  ```text
-  http://localhost:3000
-  ```
-
-- Allowed Logout URLs
-  ```text
-  http://localhost:3000
-  ```
-
 ### attach roles to Service Account for firestore exporting
 
 ```shell script
