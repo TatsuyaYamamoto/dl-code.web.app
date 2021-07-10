@@ -45,7 +45,7 @@ export class UserService {
     }
 
     await newUserDocRef.set(newUserDoc);
-    logger.error(`new user is inited.`, newUserDoc);
+    logger.log(`new user is inited.`, newUserDoc);
     return newUserDoc as DlCodeUserDocument;
   }
 
