@@ -6,7 +6,7 @@ import styled from "styled-components";
 import LinkButton from "../atoms/LinkButton";
 import Logo from "../atoms/Logo";
 
-import config from "../../configs";
+import { TWITTER_URL, CONTACT_FORM_URL } from "../../configs";
 
 const copyRightSymbol = `\u00A9`;
 
@@ -26,9 +26,7 @@ const Root = styled.div`
 
 const Footer: React.FC = () => {
   const contact = (
-    <StyledLinkButton href={config.contactFormUrl}>
-      お問い合わせ
-    </StyledLinkButton>
+    <StyledLinkButton href={CONTACT_FORM_URL}>お問い合わせ</StyledLinkButton>
   );
 
   const dlCode = (
@@ -38,7 +36,7 @@ const Footer: React.FC = () => {
   );
 
   const twitter = (
-    <StyledLinkButton href={config.twitterUrl}>Twitter</StyledLinkButton>
+    <StyledLinkButton href={TWITTER_URL}>Twitter</StyledLinkButton>
   );
 
   const copyRight = (

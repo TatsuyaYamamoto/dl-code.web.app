@@ -1,11 +1,11 @@
-import configs from "../configs";
+import { API_BASE_URL } from "../configs";
 import type { ActivatedProductsDto } from "../functions/api/controller/dto/ActivatedProductsDto";
 import { AuditLogDocument } from "../domains/AuditLog";
 import { IProduct } from "../domains/Product";
 import { IDownloadCode } from "../domains/DownloadCodeSet";
 
 export const initUser = (params: { uid: string; idToken: string }) => {
-  return fetch(`${configs.apiBaseUrl}/api/users/${params.uid}/init`, {
+  return fetch(`${API_BASE_URL}/api/users/${params.uid}/init`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${params.idToken}`,
@@ -19,9 +19,7 @@ export const getProductsByDownloadCode = async (
   [code: string]: { product: IProduct; downloadCode: IDownloadCode };
 }> => {
   const query = `?codes=${codes.join(",")}`;
-  const res = await fetch(
-    `${configs.apiBaseUrl}/api/products/activated${query}`
-  );
+  const res = await fetch(`${API_BASE_URL}/api/products/activated${query}`);
   if (!res.ok) {
     return {};
   }
@@ -90,7 +88,7 @@ export const sendImpression = (params: {
   text: string;
   idToken?: string;
 }): Promise<any> => {
-  return fetch(`${configs.apiBaseUrl}/api/users/${params.uid}/impressions`, {
+  return fetch(`${API_BASE_URL}/api/users/${params.uid}/impressions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -114,5 +112,5 @@ export const sendAuditLog = (
   const data = new Blob([JSON.stringify(params)], {
     type: "application/json",
   });
-  return navigator.sendBeacon(`${configs.apiBaseUrl}/api/audit-logs`, data);
+  return navigator.sendBeacon(`${API_BASE_URL}/api/audit-logs`, data);
 };

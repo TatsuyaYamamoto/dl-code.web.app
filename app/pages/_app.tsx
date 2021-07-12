@@ -20,7 +20,6 @@ import { FirebaseContextProvider } from "../components/hooks/useFirebase";
 import { AuthProvider } from "../components/hooks/useAuth";
 
 import theme from "../theme";
-import configs from "../configs";
 import useAuditLogger from "../components/hooks/useAuditLogger";
 import { LogType } from "../domains/AuditLog";
 
@@ -142,9 +141,7 @@ const MyApp: React.FC<AppProps> = (props) => {
       <GlobalStyle />
       <CssBaseline />
       <ThemeProvider theme={theme}>
-        <FirebaseContextProvider
-          initParams={{ options: configs.firebaseConfigs }}
-        >
+        <FirebaseContextProvider>
           <AuthProvider>
             <SnackbarProvider maxSnack={3}>
               <Component {...pageProps} />

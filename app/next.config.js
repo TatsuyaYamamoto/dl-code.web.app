@@ -15,8 +15,8 @@ if (isProduction) {
 
 const env = {
   version: `v${packageJson.version}.${gitRev}`,
-  nodeEnv: process.env.NODE_ENV,
-  emulator: process.env.EMULATOR,
+  NEXT_PUBLIC_APP_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_EMULATOR: process.env.EMULATOR,
   noIndex: true,
   gaTrackingId: "UA-127664761-5",
   title: "DEVELOPMENT DLCode",

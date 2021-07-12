@@ -1,6 +1,7 @@
-import React, { useState, createContext, useContext } from "react";
-
+import React, { FC, useState, createContext, useContext } from "react";
 import firebase from "firebase/app";
+
+import { EMULATOR_URLS, FIREBASE_CONFIG } from "../../configs";
 
 type FirebaseApp = firebase.app.App;
 type FirebaseUser = firebase.User;
@@ -8,36 +9,26 @@ type FirebaseUser = firebase.User;
 interface IFirebaseContext {
   app: FirebaseApp;
   user?: FirebaseUser;
-  authStateChecked: boolean;
-}
-
-interface FirebaseContextProviderProps {
-  initParams: { options: object; name?: string };
 }
 
 const firebaseContext = createContext<IFirebaseContext>(null as any);
 
-const FirebaseContextProvider: React.FC<FirebaseContextProviderProps> = (
-  props
-) => {
-  const { initParams } = props;
+const FirebaseContextProvider: FC = (props) => {
   const [contextValue] = useState<IFirebaseContext>(() => {
-    const app =
-      firebase.apps[0] ??
-      firebase.initializeApp(initParams.options, initParams.name);
+    const app = firebase.apps[0] ?? firebase.initializeApp(FIREBASE_CONFIG);
 
-    if (process.env.emulator) {
-      app.functions().useEmulator("localhost", 5001);
-      app.firestore().useEmulator("localhost", 5002);
-      app.storage().useEmulator("localhost", 5003);
-      app.auth().useEmulator("http://localhost:5004");
+    if (EMULATOR_URLS) {
+      const { functions, firestore, storage, auth } = EMULATOR_URLS;
+      app.functions().useEmulator(functions.host, functions.port);
+      app.firestore().useEmulator(firestore.host, firestore.port);
+      app.storage().useEmulator(storage.host, storage.port);
+      app.auth().useEmulator(auth.url);
     }
 
     // @ts-ignore
     log(`firebase app initialized. projectId: ${app.options.projectId}`);
 
     return {
-      authStateChecked: false,
       app,
     };
   });
@@ -50,10 +41,9 @@ const FirebaseContextProvider: React.FC<FirebaseContextProviderProps> = (
 };
 
 const useFirebase = () => {
-  const { app, user, authStateChecked } = useContext(firebaseContext);
+  const { app, user } = useContext(firebaseContext);
 
   return {
-    authStateChecked,
     app,
     user,
   };

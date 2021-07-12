@@ -1,4 +1,5 @@
 import { storage } from "firebase-admin";
+import { EMULATOR_URLS } from "../../configs";
 
 const parseStorageUrl = (
   storageUrl: string
@@ -12,6 +13,12 @@ const parseStorageUrl = (
 export const getUnsignedDownloadUrl = (storageUrl: string) => {
   const { bucket, fileName } = parseStorageUrl(storageUrl);
   const encodedFileName = encodeURIComponent(fileName);
+
+  if (EMULATOR_URLS?.storage) {
+    const { host, port } = EMULATOR_URLS.storage;
+    return `http://${host}:${port}/v0/b/${bucket}/o/${encodedFileName}?alt=media`;
+  }
+
   return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedFileName}?alt=media`;
 };
 
