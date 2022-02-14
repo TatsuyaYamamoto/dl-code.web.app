@@ -85,7 +85,7 @@
     "@codeceptjs/ui": "^0.4.6",
     "@storybook/addon-actions": "^6.2.9",
     "@storybook/addon-links": "^6.2.9",
-    "@storybook/addons": "^6.2.9",
+    "@storybook/addons": "^6.4.19",
     "@storybook/react": "^6.2.9",
     "@types/luxon": "^1.27.0",
     "@types/nprogress": "^0.2.0",
