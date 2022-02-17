@@ -69,7 +69,7 @@
     "jsqr": "^1.4.0",
     "luxon": "^1.27.0",
     "material-table": "^1.69.3",
-    "next": "^10.2.3",
+    "next": "^12.1.0",
     "notistack": "^1.0.9",
     "nprogress": "^0.2.0",
     "react": "^16.14.0",
