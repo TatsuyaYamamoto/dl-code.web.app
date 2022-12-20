@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@codeceptjs/ui": "^0.4.6",
-    "@storybook/addon-actions": "^6.2.9",
+    "@storybook/addon-actions": "^6.5.15",
     "@storybook/addon-links": "^6.2.9",
     "@storybook/addons": "^6.2.9",
     "@storybook/react": "^6.2.9",
